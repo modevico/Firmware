@@ -38,6 +38,7 @@
 MODULE_COMMAND  = mavlink
 
 SRCS 		 +=	mavlink.c \
+			mavlink_params.c \
 		  	mavlink_main.cpp \
 			mavlink_mission.cpp \
 			mavlink_parameters.cpp \

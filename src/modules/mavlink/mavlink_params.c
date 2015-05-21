@@ -33,37 +33,65 @@
 
 /**
  * @file mavlink.c
- * Adapter functions expected by the protocol library
+ * Mavlink parameters
  *
  * @author Lorenz Meier <lm@inf.ethz.ch>
  */
 
-#include <px4_config.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
-#include "mavlink_bridge_header.h"
+#include "v1.0/common/mavlink.h"
+#include <systemlib/param/param.h>
 
-mavlink_system_t mavlink_system = {
-	100,
-	50
-}; // System ID, 1-255, Component/Subsystem ID, 1-255
-
-/*
- * Internal function to give access to the channel status for each channel
+/* define MAVLink specific parameters */
+/**
+ * MAVLink system ID
+ * @group MAVLink
+ * @min 1
+ * @max 250
  */
-extern mavlink_status_t *mavlink_get_channel_status(uint8_t channel)
-{
-	static mavlink_status_t m_mavlink_status[MAVLINK_COMM_NUM_BUFFERS];
-	return &m_mavlink_status[channel];
-}
+PARAM_DEFINE_INT32(MAV_SYS_ID, 1);
 
-/*
- * Internal function to give access to the channel buffer for each channel
+/**
+ * MAVLink component ID
+ * @group MAVLink
+ * @min 1
+ * @max 50
  */
-extern mavlink_message_t *mavlink_get_channel_buffer(uint8_t channel)
-{
-	static mavlink_message_t m_mavlink_buffer[MAVLINK_COMM_NUM_BUFFERS];
-	return &m_mavlink_buffer[channel];
-}
+PARAM_DEFINE_INT32(MAV_COMP_ID, 50);
+
+/**
+ * MAVLink type
+ * @group MAVLink
+ */
+PARAM_DEFINE_INT32(MAV_TYPE, MAV_TYPE_FIXED_WING);
+
+/**
+ * Use/Accept HIL GPS message (even if not in HIL mode)
+ *
+ * If set to 1 incomming HIL GPS messages are parsed.
+ *
+ * @group MAVLink
+ */
+PARAM_DEFINE_INT32(MAV_USEHILGPS, 0);
+
+/**
+ * Forward external setpoint messages
+ *
+ * If set to 1 incomming external setpoint messages will be directly forwarded to the controllers if in offboard
+ * control mode
+ *
+ * @group MAVLink
+ */
+PARAM_DEFINE_INT32(MAV_FWDEXTSP, 1);
+
+/**
+ * Test parameter
+ *
+ * This parameter is not actively used by the system. Its purpose is to allow
+ * testing the parameter interface on the communication level.
+ *
+ * @group MAVLink
+ * @min -1000
+ * @max 1000
+ */
+PARAM_DEFINE_INT32(MAV_TEST_PAR, 1);
+

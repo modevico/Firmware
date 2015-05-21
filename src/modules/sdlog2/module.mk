@@ -40,6 +40,7 @@ MODULE_COMMAND  = sdlog2
 MODULE_PRIORITY = "SCHED_PRIORITY_MAX-30"
 
 SRCS = sdlog2.c \
+       sdlog2_params.c \
        logbuffer.c
 
 MODULE_STACKSIZE = 1200
