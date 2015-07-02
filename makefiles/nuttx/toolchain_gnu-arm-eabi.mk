@@ -125,6 +125,7 @@ ARCHOPTIMIZATION	 = $(MAXOPTIMIZATION) \
 # note - requires corresponding support in NuttX
 INSTRUMENTATIONDEFINES	 = $(ARCHINSTRUMENTATIONDEFINES_$(CONFIG_ARCH))
 
+
 LIBC	 := $(shell ${CC} ${ARCHCPUFLAGS} -print-file-name=libc.a)
 
 # Language-specific flags
@@ -287,7 +288,8 @@ endef
 define LINK
 	@$(ECHO) "LINK:    $1"
 	@$(MKDIR) -p $(dir $1)
-	$(Q) $(LD) $(LDFLAGS) -Map $1.map -o $1 --start-group $2 $(LIBS) $(EXTRA_LIBS) $(LIBGCC) --end-group
+	$(Q) $(LD) $(LDFLAGS) -Map $1.map -o $1 --start-group $2 $(LIBS) $(EXTRA_LIBS) ${LIBSTDCXX} $(LIBGCC) --end-group
+	#$(LD) $(LDFLAGS) -Map $1.map -o $1 --start-group $2 $(LIBS) $(EXTRA_LIBS) ${LIBSTDCXX} $(LIBGCC) --end-group
 endef
 
 # Convert $1 from a linked object to a raw binary in $2

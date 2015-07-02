@@ -953,13 +953,17 @@ Mavlink::resend_message(mavlink_message_t *msg)
 void
 Mavlink::init_udp()
 {
+
 #ifdef __PX4_LINUX
 	PX4_INFO("Setting up UDP w/port %d\n",_network_port);
+
 
 	memset((char *)&_myaddr, 0, sizeof(_myaddr));
 	_myaddr.sin_family = AF_INET;
 	_myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+
 	_myaddr.sin_port = htons(_network_port);
+
 
 	if ((_socket_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		PX4_WARN("create socket failed\n");
@@ -976,7 +980,9 @@ Mavlink::init_udp()
 
 	// wait for client to connect to socket
 	recvfrom(_socket_fd,inbuf,sizeof(inbuf),0,(struct sockaddr *)&_src_addr,&addrlen);
+
 #endif
+
 }
 
 void
@@ -1402,14 +1408,18 @@ Mavlink::task_main(int argc, char *argv[])
 
 		case 'd':
 			_device_name = myoptarg;
+
 			set_protocol(SERIAL);
+
 			break;
 			
 		case 'u':
 			temp_int_arg = strtoul(myoptarg, &eptr, 10);
 			if ( *eptr == '\0' ) {
+
 				_network_port = temp_int_arg;
 				set_protocol(UDP);
+
 			} else {
 				warnx("invalid data udp_port '%s'", myoptarg);
 				err_flag = true;

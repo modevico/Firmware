@@ -698,7 +698,7 @@ Sensors::parameters_update()
 		if (!PX4_ISFINITE(tmpScaleFactor) ||
 		    (tmpRevFactor < 0.000001f) ||
 		    (tmpRevFactor > 0.2f)) {
-			warnx("RC chan %u not sane, scaling: %8.6f, rev: %d", i, (double)tmpScaleFactor, (int)(_parameters.rev[i]));
+			PX4_WARN("RC chan %u not sane, scaling: %8.6f, rev: %d", i, (double)tmpScaleFactor, (int)(_parameters.rev[i]));
 			/* scaling factors do not make sense, lock them down */
 			_parameters.scaling_factor[i] = 0.0f;
 			rc_valid = false;
@@ -710,58 +710,58 @@ Sensors::parameters_update()
 
 	/* handle wrong values */
 	if (!rc_valid) {
-		warnx("WARNING     WARNING     WARNING\n\nRC CALIBRATION NOT SANE!\n\n");
+		PX4_WARN("WARNING     WARNING     WARNING\n\nRC CALIBRATION NOT SANE!\n\n");
 	}
 
 	const char *paramerr = "FAIL PARM LOAD";
 
 	/* channel mapping */
 	if (param_get(_parameter_handles.rc_map_roll, &(_parameters.rc_map_roll)) != OK) {
-		warnx("%s", paramerr);
+		PX4_WARN("%s", paramerr);
 	}
 
 	if (param_get(_parameter_handles.rc_map_pitch, &(_parameters.rc_map_pitch)) != OK) {
-		warnx("%s", paramerr);
+		PX4_WARN("%s", paramerr);
 	}
 
 	if (param_get(_parameter_handles.rc_map_yaw, &(_parameters.rc_map_yaw)) != OK) {
-		warnx("%s", paramerr);
+		PX4_WARN("%s", paramerr);
 	}
 
 	if (param_get(_parameter_handles.rc_map_throttle, &(_parameters.rc_map_throttle)) != OK) {
-		warnx("%s", paramerr);
+		PX4_WARN("%s", paramerr);
 	}
 
 	if (param_get(_parameter_handles.rc_map_failsafe, &(_parameters.rc_map_failsafe)) != OK) {
-		warnx("%s", paramerr);
+		PX4_WARN("%s", paramerr);
 	}
 
 	if (param_get(_parameter_handles.rc_map_mode_sw, &(_parameters.rc_map_mode_sw)) != OK) {
-		warnx("%s", paramerr);
+		PX4_WARN("%s", paramerr);
 	}
 
 	if (param_get(_parameter_handles.rc_map_return_sw, &(_parameters.rc_map_return_sw)) != OK) {
-		warnx("%s", paramerr);
+		PX4_WARN("%s", paramerr);
 	}
 
 	if (param_get(_parameter_handles.rc_map_posctl_sw, &(_parameters.rc_map_posctl_sw)) != OK) {
-		warnx("%s", paramerr);
+		PX4_WARN("%s", paramerr);
 	}
 
 	if (param_get(_parameter_handles.rc_map_loiter_sw, &(_parameters.rc_map_loiter_sw)) != OK) {
-		warnx("%s", paramerr);
+		PX4_WARN("%s", paramerr);
 	}
 
 	if (param_get(_parameter_handles.rc_map_acro_sw, &(_parameters.rc_map_acro_sw)) != OK) {
-		warnx("%s", paramerr);
+		PX4_WARN("%s", paramerr);
 	}
 
 	if (param_get(_parameter_handles.rc_map_offboard_sw, &(_parameters.rc_map_offboard_sw)) != OK) {
-		warnx("%s", paramerr);
+		PX4_WARN("%s", paramerr);
 	}
 
 	if (param_get(_parameter_handles.rc_map_flaps, &(_parameters.rc_map_flaps)) != OK) {
-		warnx("%s", paramerr);
+		PX4_WARN("%s", paramerr);
 	}
 
 	param_get(_parameter_handles.rc_map_aux1, &(_parameters.rc_map_aux1));
@@ -828,12 +828,12 @@ Sensors::parameters_update()
 
 	/* scaling of ADC ticks to battery voltage */
 	if (param_get(_parameter_handles.battery_voltage_scaling, &(_parameters.battery_voltage_scaling)) != OK) {
-		warnx("%s", paramerr);
+		PX4_WARN("%s", paramerr);
 	}
 
 	/* scaling of ADC ticks to battery current */
 	if (param_get(_parameter_handles.battery_current_scaling, &(_parameters.battery_current_scaling)) != OK) {
-		warnx("%s", paramerr);
+		PX4_WARN("%s", paramerr);
 	}
 
 	param_get(_parameter_handles.board_rotation, &(_parameters.board_rotation));
@@ -847,7 +847,7 @@ Sensors::parameters_update()
 		int flowret = px4_ioctl(flowfd, SENSORIOCSROTATION, _parameters.flow_rotation);
 
 		if (flowret) {
-			warnx("flow rotation could not be set");
+			PX4_WARN("flow rotation could not be set");
 			px4_close(flowfd);
 			return ERROR;
 		}
@@ -875,14 +875,14 @@ Sensors::parameters_update()
 	barofd = px4_open(BARO0_DEVICE_PATH, 0);
 
 	if (barofd < 0) {
-		warnx("ERROR: no barometer found on %s", BARO0_DEVICE_PATH);
+		PX4_WARN("ERROR: no barometer found on %s", BARO0_DEVICE_PATH);
 		return ERROR;
 
 	} else {
 		int baroret = px4_ioctl(barofd, BAROIOCSMSLPRESSURE, (unsigned long)(_parameters.baro_qnh * 100));
 
 		if (baroret) {
-			warnx("qnh could not be set");
+			PX4_WARN("qnh could not be set");
 			px4_close(barofd);
 			return ERROR;
 		}
@@ -901,7 +901,7 @@ Sensors::accel_init()
 	fd = px4_open(ACCEL0_DEVICE_PATH, 0);
 
 	if (fd < 0) {
-		warnx("FATAL: no accelerometer found: %s", ACCEL0_DEVICE_PATH);
+		PX4_WARN("FATAL: no accelerometer found: %s", ACCEL0_DEVICE_PATH);
 		return ERROR;
 
 	} else {
@@ -926,7 +926,7 @@ Sensors::gyro_init()
 	fd = px4_open(GYRO0_DEVICE_PATH, 0);
 
 	if (fd < 0) {
-		warnx("FATAL: no gyro found: %s", GYRO0_DEVICE_PATH);
+		PX4_WARN("FATAL: no gyro found: %s", GYRO0_DEVICE_PATH);
 		return ERROR;
 
 	}
@@ -951,7 +951,7 @@ Sensors::mag_init()
 	fd = px4_open(MAG0_DEVICE_PATH, 0);
 
 	if (fd < 0) {
-		warnx("FATAL: no magnetometer found: %s", MAG0_DEVICE_PATH);
+		PX4_WARN("FATAL: no magnetometer found: %s", MAG0_DEVICE_PATH);
 		return ERROR;
 	}
 
@@ -973,7 +973,7 @@ Sensors::mag_init()
 			px4_ioctl(fd, SENSORIOCSPOLLRATE, 100);
 
 		} else {
-			warnx("FATAL: mag sampling rate could not be set");
+			PX4_WARN("FATAL: mag sampling rate could not be set");
 			return ERROR;
 		}
 	}
@@ -991,7 +991,7 @@ Sensors::baro_init()
 	fd = px4_open(BARO0_DEVICE_PATH, 0);
 
 	if (fd < 0) {
-		warnx("FATAL: No barometer found: %s", BARO0_DEVICE_PATH);
+		PX4_WARN("FATAL: No barometer found: %s", BARO0_DEVICE_PATH);
 		return ERROR;
 	}
 
@@ -1010,7 +1010,7 @@ Sensors::adc_init()
 	_fd_adc = px4_open(ADC0_DEVICE_PATH, O_RDONLY | O_NONBLOCK);
 
 	if (_fd_adc < 0) {
-		warnx("FATAL: no ADC found: %s", ADC0_DEVICE_PATH);
+		PX4_WARN("FATAL: no ADC found: %s", ADC0_DEVICE_PATH);
 		return ERROR;
 	}
 
@@ -1030,6 +1030,7 @@ Sensors::accel_poll(struct sensor_combined_s &raw)
 
 		math::Vector<3> vect(accel_report.x, accel_report.y, accel_report.z);
 		vect = _board_rotation * vect;
+
 
 		raw.accelerometer_m_s2[0] = vect(0);
 		raw.accelerometer_m_s2[1] = vect(1);
@@ -1099,12 +1100,12 @@ Sensors::gyro_poll(struct sensor_combined_s &raw)
 
 	if (gyro_updated) {
 		struct gyro_report	gyro_report;
-
 		orb_copy(ORB_ID(sensor_gyro), _gyro_sub, &gyro_report);
 
 		math::Vector<3> vect(gyro_report.x, gyro_report.y, gyro_report.z);
 		vect = _board_rotation * vect;
 
+		//PX4_WARN("Got gyro.  x: %f, y: %f, z: %f", vect(0),vect(1),vect(2)); 
 		raw.gyro_rad_s[0] = vect(0);
 		raw.gyro_rad_s[1] = vect(1);
 		raw.gyro_rad_s[2] = vect(2);
@@ -1177,8 +1178,8 @@ Sensors::mag_poll(struct sensor_combined_s &raw)
 		orb_copy(ORB_ID(sensor_mag), _mag_sub, &mag_report);
 
 		math::Vector<3> vect(mag_report.x, mag_report.y, mag_report.z);
-
 		vect = _mag_rotation[0] * vect;
+		//PX4_WARN("Mag after : %lu, %f, %f, %f",mag_report.timestamp,vect(0),vect(1),vect(2));
 
 		raw.magnetometer_ga[0] = vect(0);
 		raw.magnetometer_ga[1] = vect(1);
@@ -1329,7 +1330,8 @@ Sensors::vehicle_control_mode_poll()
 		orb_copy(ORB_ID(vehicle_control_mode), _vcontrol_mode_sub, &vcontrol_mode);
 
 		/* switching from non-HIL to HIL mode */
-		//printf("[sensors] Vehicle mode: %i \t AND: %i, HIL: %i\n", vstatus.mode, vstatus.mode & VEHICLE_MODE_FLAG_HIL_ENABLED, hil_enabled);
+		//PX4_WARN("vcontrol_mode.flag_system_hil_enabled: %d, _hil_enabled: %d, _publishing: %d",
+		//	 vcontrol_mode.flag_system_hil_enabled,_hil_enabled,_publishing);
 		if (vcontrol_mode.flag_system_hil_enabled && !_hil_enabled) {
 			_hil_enabled = true;
 			_publishing = false;
@@ -1412,12 +1414,12 @@ Sensors::parameter_update_poll(bool forced)
 					failed = failed || (OK != param_get(param_find(str), &gscale.z_scale));
 
 					if (failed) {
-						warnx(CAL_ERROR_APPLY_CAL_MSG, "gyro", i);
+						PX4_WARN(CAL_ERROR_APPLY_CAL_MSG, "gyro", i);
 					} else {
 						/* apply new scaling and offsets */
 						res = px4_ioctl(fd, GYROIOCSSCALE, (long unsigned int)&gscale);
 						if (res) {
-							warnx(CAL_ERROR_APPLY_CAL_MSG, "gyro", i);
+							PX4_WARN(CAL_ERROR_APPLY_CAL_MSG, "gyro", i);
 						} else {
 							config_ok = true;
 						}
@@ -1478,12 +1480,12 @@ Sensors::parameter_update_poll(bool forced)
 					failed = failed || (OK != param_get(param_find(str), &gscale.z_scale));
 
 					if (failed) {
-						warnx(CAL_ERROR_APPLY_CAL_MSG, "accel", i);
+						PX4_WARN(CAL_ERROR_APPLY_CAL_MSG, "accel", i);
 					} else {
 						/* apply new scaling and offsets */
 						res = px4_ioctl(fd, ACCELIOCSSCALE, (long unsigned int)&gscale);
 						if (res) {
-							warnx(CAL_ERROR_APPLY_CAL_MSG, "accel", i);
+							PX4_WARN(CAL_ERROR_APPLY_CAL_MSG, "accel", i);
 						} else {
 							config_ok = true;
 						}
@@ -1502,6 +1504,12 @@ Sensors::parameter_update_poll(bool forced)
 		/* run through all mag sensors */
 		for (unsigned s = 0; s < 3; s++) {
 
+			/* set a valid default rotation (same as board).
+			 * if the mag is configured, this might be replaced
+			 * in the section below.
+			 */
+			_mag_rotation[s] = _board_rotation;
+
 			res = ERROR;
 			(void)sprintf(str, "%s%u", MAG_BASE_DEVICE_PATH, s);
 
@@ -1512,11 +1520,6 @@ Sensors::parameter_update_poll(bool forced)
 				continue;
 			}
 
-			/* set a valid default rotation (same as board).
-			 * if the mag is configured, this might be replaced
-			 * in the section below.
-			 */
-			_mag_rotation[s] = _board_rotation;
 
 			bool config_ok = false;
 
@@ -1601,12 +1604,12 @@ Sensors::parameter_update_poll(bool forced)
 					}
 
 					if (failed) {
-						warnx(CAL_ERROR_APPLY_CAL_MSG, "mag", i);
+						PX4_WARN(CAL_ERROR_APPLY_CAL_MSG, "mag", i);
 					} else {
 						/* apply new scaling and offsets */
 						res = px4_ioctl(fd, MAGIOCSSCALE, (long unsigned int)&gscale);
 						if (res) {
-							warnx(CAL_ERROR_APPLY_CAL_MSG, "mag", i);
+							PX4_WARN(CAL_ERROR_APPLY_CAL_MSG, "mag", i);
 						} else {
 							config_ok = true;
 						}
@@ -1640,7 +1643,7 @@ Sensors::parameter_update_poll(bool forced)
 		}
 
 		/* do not output this for now, as its covered in preflight checks */
-		// warnx("valid configs: %u gyros, %u mags, %u accels", gyro_count, mag_count, accel_count);
+		// PX4_WARN("valid configs: %u gyros, %u mags, %u accels", gyro_count, mag_count, accel_count);
 	}
 }
 
@@ -1672,10 +1675,10 @@ Sensors::rc_parameter_map_poll(bool forced)
 
 		}
 
-		warnx("rc to parameter map updated");
+		PX4_WARN("rc to parameter map updated");
 
 		for (int i = 0; i < RC_PARAM_MAP_NCHAN; i++) {
-			warnx("\ti %d param_id %s scale %.3f value0 %.3f, min %.3f, max %.3f",
+			PX4_WARN("\ti %d param_id %s scale %.3f value0 %.3f, min %.3f, max %.3f",
 			      i,
 			      _rc_parameter_map.param_id[i],
 			      (double)_rc_parameter_map.scale[i],
@@ -1900,11 +1903,12 @@ Sensors::rc_poll()
 		/* read low-level values from FMU or IO RC inputs (PPM, Spektrum, S.Bus) */
 		struct rc_input_values rc_input;
 
+		//PX4_WARN("input_rc topic received");
 		orb_copy(ORB_ID(input_rc), _rc_sub, &rc_input);
 
 		/* detect RC signal loss */
 		bool signal_lost;
-
+		
 		/* check flags and require at least four channels to consider the signal valid */
 		if (rc_input.rc_lost || rc_input.rc_failsafe || rc_input.channel_count < 4) {
 			/* signal is lost or no enough channels */
@@ -2079,9 +2083,10 @@ Sensors::task_main_trampoline(int argc, char *argv[])
 void
 Sensors::task_main()
 {
-
+        PX4_WARN("Starting sensors task main.");
 	/* start individual sensors */
 	int ret = 0;
+#if 0
 	do { /* create a scope to handle exit with break */
 		ret = accel_init();
 		if (ret) break;
@@ -2097,15 +2102,15 @@ Sensors::task_main()
 	} while (0);
 
 	if (ret) {
-		warnx("Sensor initialization failed");
+                PX4_WARN("Sensor initialization failed");
 		_sensors_task = -1;
 		if (_fd_adc >=0) {
-			close(_fd_adc);
+			px4_close(_fd_adc);
 			_fd_adc = -1;
 		}
 		return;
 	}
-
+#endif
 	/*
 	 * do subscriptions
 	 */
@@ -2186,17 +2191,17 @@ Sensors::task_main()
 	fds[0].events = POLLIN;
 
 	_task_should_exit = false;
-
 	while (!_task_should_exit) {
 
 		/* wait for up to 50ms for data */
-		int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), 50);
+		int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), CONFIG_HACK_POLL_TIMEOUT);
+		//int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), 50);
 
 		/* if pret == 0 it timed out - periodic check for _task_should_exit, etc. */
 
 		/* this is undesirable but not much we can do - might want to flag unhappy status */
 		if (pret < 0) {
-			warn("poll error %d, %d", pret, errno);
+			PX4_WARN("poll error %d, %d", pret, errno);
 			continue;
 		}
 
@@ -2214,7 +2219,7 @@ Sensors::task_main()
 
 		/* work out if main gyro timed out and fail over to alternate gyro */
 		if (hrt_elapsed_time(&raw.timestamp) > 20 * 1000) {
-
+		  
 			/* if the secondary failed as well, go to the tertiary */
 			if (hrt_elapsed_time(&raw.gyro1_timestamp) > 20 * 1000) {
 				fds[0].fd = _gyro2_sub;
@@ -2230,6 +2235,7 @@ Sensors::task_main()
 
 		/* Inform other processes that new data is available to copy */
 		if (_publishing) {
+			//PX4_WARN("Publishing sensors combined.");
 			orb_publish(ORB_ID(sensor_combined), _sensor_pub, &raw);
 		}
 
@@ -2245,7 +2251,7 @@ Sensors::task_main()
 		perf_end(_loop_perf);
 	}
 
-	warnx("exiting.");
+	PX4_WARN("exiting.");
 	_sensors_task = -1;
 	px4_task_exit(ret);
 }
@@ -2277,38 +2283,40 @@ Sensors::start()
 
 int sensors_main(int argc, char *argv[])
 {
+	PX4_WARN("Entering sensors_main.");
+	usleep(1000000);
 	if (argc < 2) {
-		warnx("usage: sensors {start|stop|status}");
+		PX4_WARN("usage: sensors {start|stop|status}");
 		return 0;
 	}
 
 	if (!strcmp(argv[1], "start")) {
 
 		if (sensors::g_sensors != nullptr) {
-			warnx("already running");
+			PX4_WARN("already running");
 			return 0;
 		}
 
 		sensors::g_sensors = new Sensors;
 
 		if (sensors::g_sensors == nullptr) {
-			warnx("alloc failed");
+			PX4_WARN("alloc failed");
 			return 1;
 		}
 
 		if (OK != sensors::g_sensors->start()) {
 			delete sensors::g_sensors;
 			sensors::g_sensors = nullptr;
-			warnx("start failed");
+			PX4_WARN("start failed");
 			return 1;
 		}
-
+		PX4_WARN("Sensors module starting.");
 		return 0;
 	}
 
 	if (!strcmp(argv[1], "stop")) {
 		if (sensors::g_sensors == nullptr) {
-			warnx("not running");
+			PX4_WARN("not running");
 			return 1;
 		}
 
@@ -2319,15 +2327,15 @@ int sensors_main(int argc, char *argv[])
 
 	if (!strcmp(argv[1], "status")) {
 		if (sensors::g_sensors) {
-			warnx("is running");
+			PX4_WARN("is running");
 			return 0;
 
 		} else {
-			warnx("not running");
+			PX4_WARN("not running");
 			return 1;
 		}
 	}
 
-	warnx("unrecognized command");
+	PX4_WARN("unrecognized command");
 	return 1;
 }

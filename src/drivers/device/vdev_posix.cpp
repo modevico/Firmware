@@ -43,7 +43,6 @@
 #include "device.h"
 #include "vfile.h"
 
-#include <hrt_work.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -54,11 +53,26 @@ using namespace device;
 
 extern "C" {
 
-static void timer_cb(void *data)
+struct timerData {
+	sem_t &sem;
+	struct timespec &ts;
+ 
+	timerData(sem_t &s, struct timespec &t) : sem(s), ts(t) {}
+	~timerData() {}
+};
+
+static void *timer_handler(void *data)
 {
-	sem_t *p_sem = (sem_t *)data;
-	sem_post(p_sem);
+	struct timerData *td = (struct timerData *)data;
+
+	if (td->ts.tv_sec) {
+		sleep(td->ts.tv_sec);
+	}
+	usleep(td->ts.tv_nsec/1000);
+	sem_post(&(td->sem));
+
 	PX4_DEBUG("timer_handler: Timer expired");
+	return 0;
 }
 
 #define PX4_MAX_FD 200
@@ -197,6 +211,7 @@ int px4_poll(px4_pollfd_struct_t *fds, nfds_t nfds, int timeout)
 	int count = 0;
 	int ret;
 	unsigned int i;
+	struct timespec ts;
 
 	PX4_DEBUG("Called px4_poll timeout = %d", timeout);
 	sem_init(&sem, 0, 0);
@@ -212,7 +227,7 @@ int px4_poll(px4_pollfd_struct_t *fds, nfds_t nfds, int timeout)
 		if (valid_fd(fds[i].fd))
 		{
 			VDev *dev = (VDev *)(filemap[fds[i].fd]->vdev);;
-			PX4_DEBUG("px4_poll: VDev->poll(setup) %d", fds[i].fd);
+			PX4_DEBUG("px4_poll: VDev->poll(setup) %d for dev %s", fds[i].fd,dev->get_devname());
 			ret = dev->poll(filemap[fds[i].fd], &fds[i], true);
 
 			if (ret < 0)
@@ -224,15 +239,27 @@ int px4_poll(px4_pollfd_struct_t *fds, nfds_t nfds, int timeout)
 	{
 		if (timeout >= 0)
 		{
-			// Use a work queue task
-			work_s _hpwork;
+			pthread_t pt;
+			void *res;
 
-			hrt_work_queue(&_hpwork, (worker_t)&timer_cb, (void *)&sem, 1000*timeout);
+			ts.tv_sec = timeout/1000;
+			ts.tv_nsec = (timeout % 1000)*1000000;
+
+			// Create a timer to unblock
+			struct timerData td(sem, ts);
+			int rv = pthread_create(&pt, NULL, timer_handler, (void *)&td);
+			if (rv != 0) {
+				count = -1;
+				goto cleanup;
+			}
 			sem_wait(&sem);
 
 			// Make sure timer thread is killed before sem goes
 			// out of scope
-			hrt_work_cancel(&_hpwork);
+#ifdef __PX4_POSIX
+			(void)pthread_cancel(pt);
+			(void)pthread_join(pt, &res);
+#endif
         	}
 		else
 		{
@@ -258,6 +285,7 @@ int px4_poll(px4_pollfd_struct_t *fds, nfds_t nfds, int timeout)
 		}
 	}
 
+cleanup:
 	sem_destroy(&sem);
 
 	return count;

@@ -1104,6 +1104,7 @@ GYROSIM::measure()
 		perf_begin(_system_latency_perf);
 		/* publish it */
 		orb_publish(ORB_ID(sensor_accel), _accel_topic, &arb);
+
 	}
 
 	if (!(_pub_blocked)) {

@@ -47,7 +47,7 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <float.h>
-#include <termios.h>
+//#include <termios.h>
 #include <errno.h>
 #include <limits.h>
 #include <math.h>
@@ -106,8 +106,8 @@ public:
 
 private:
 	static constexpr float _dt_max = 0.02;
-	bool		_task_should_exit = false;		/**< if true, task should exit */
-	int		_control_task = -1;			/**< task handle for task */
+	bool		_task_should_exit = false; /**< if true, task should exit */
+	int		_control_task = -1;	   /**< task handle for task */
 
 	int		_sensors_sub = -1;
 	int		_params_sub = -1;
@@ -122,7 +122,7 @@ private:
 		param_t	mag_decl_auto;
 		param_t	acc_comp;
 		param_t	bias_max;
-	}		_params_handles;		/**< handles for interesting parameters */
+	}		_params_handles; /**< handles for interesting parameters */
 
 	float		_w_accel = 0.0f;
 	float		_w_mag = 0.0f;
@@ -235,7 +235,8 @@ void AttitudeEstimatorQ::task_main() {
 	fds[0].events = POLLIN;
 
 	while (!_task_should_exit) {
-		int ret = px4_poll(fds, 1, 1000);
+		//int ret = px4_poll(fds, 1, 1000);
+		int ret = px4_poll(fds, 1, CONFIG_HACK_POLL_TIMEOUT);
 
 		if (ret < 0) {
 			// Poll error, sleep and try again
@@ -272,7 +273,7 @@ void AttitudeEstimatorQ::task_main() {
 			/* position data is actual */
 			if (gpos_updated) {
 				Vector<3> vel(_gpos.vel_n, _gpos.vel_e, _gpos.vel_d);
-
+				
 				/* velocity updated */
 				if (_vel_prev_t != 0 && _gpos.timestamp != _vel_prev_t) {
 					float vel_dt = (_gpos.timestamp - _vel_prev_t) / 1000000.0f;
@@ -282,7 +283,7 @@ void AttitudeEstimatorQ::task_main() {
 				_vel_prev_t = _gpos.timestamp;
 				_vel_prev = vel;
 			}
-
+			
 		} else {
 			/* position data is outdated, reset acceleration */
 			_pos_acc.zero();
@@ -298,7 +299,7 @@ void AttitudeEstimatorQ::task_main() {
 		if (dt > _dt_max) {
 			dt = _dt_max;
 		}
-
+		// This is the estimator call
 		if (!update(dt)) {
 			continue;
 		}
@@ -328,7 +329,20 @@ void AttitudeEstimatorQ::task_main() {
 		/* copy rotation matrix */
 		memcpy(&att.R[0], R.data, sizeof(att.R));
 		att.R_valid = true;
-
+		
+		/*
+		static int count=0;
+		count++;
+		if (!(count % 200)) {
+			
+			PX4_WARN("q.     0: %f, 1: %f, 2: %f, 3: %f", _q(0),_q(1),_q(2),_q(3));
+			PX4_WARN("Gyro.  x: %f, y: %f, z: %f", _gyro(0)*180.0/M_PI_F,_gyro(1)*180.0/M_PI_F,_gyro(2)*180.0/M_PI_F);
+			PX4_WARN("Accel. x: %f, y: %f, z: %f", _accel(0),_accel(1),_accel(2));
+			PX4_WARN("Mag.   x: %f, y: %f, z: %f", _mag(0),_mag(1),_mag(2));
+			PX4_WARN("Publishing attitude. roll: %f, pitch: %f, hdg: %f",
+				 att.roll*180.0/M_PI_F,att.pitch*180.0/M_PI_F,att.yaw*180.0/M_PI_F);
+		}
+		*/
 		if (_att_pub == nullptr) {
 			_att_pub = orb_advertise(ORB_ID(vehicle_attitude), &att);
 		} else {
@@ -385,6 +399,9 @@ bool AttitudeEstimatorQ::init() {
 	_q.from_dcm(R);
 	_q.normalize();
 
+	PX4_WARN("init q.     0: %f, 1: %f, 2: %f, 3: %f", _q(0),_q(1),_q(2),_q(3));
+	PX4_WARN("init tests. isfinite(_q(0)): %d, _q.length(): %f,_q.length()>0.95: %d,_q.length()<1.05: %d",
+		 PX4_ISFINITE(_q(0)),_q.length(),_q.length()>0.95,_q.length()<1.05);
 	if (PX4_ISFINITE(_q(0)) && PX4_ISFINITE(_q(1)) &&
 		PX4_ISFINITE(_q(2)) && PX4_ISFINITE(_q(3)) &&
 		_q.length() > 0.95f && _q.length() < 1.05f) {

@@ -163,8 +163,7 @@ int dspal_entry( int argc, char* argv[] )
 	process_commands(apps, get_commands());
         for( ;; )
         {
-           volatile int x = 0;
-           ++x;
+		usleep(1000000);
         }
         return 0;
 }

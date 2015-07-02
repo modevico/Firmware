@@ -46,6 +46,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <ctype.h>
+#include "px4_log.h"
 
 #include <systemlib/err.h>
 #include <systemlib/mixer/mixer.h>
@@ -64,6 +65,8 @@ static int	load(const char *devname, const char *fname);
 int
 mixer_main(int argc, char *argv[])
 {
+
+  for(int i=0; i<argc;i++) PX4_WARN("mixer_arg %d: %s",i,argv[i]);
 	if (argc < 2) {
 		usage("missing command");
 		return 1;
@@ -79,6 +82,8 @@ mixer_main(int argc, char *argv[])
 		if(ret !=0) {
 			warnx("failed to load mixer");
 			return 1;
+		} else {
+		  PX4_INFO("Mixer load successful on dev: %s, file: %s",argv[2],argv[3]);
 		}
 	} else {
 		usage("Unknown command");
@@ -91,10 +96,10 @@ static void
 usage(const char *reason)
 {
 	if (reason)
-		fprintf(stderr, "%s\n", reason);
+		PX4_INFO( "%s\n", reason);
 
-	fprintf(stderr, "usage:\n");
-	fprintf(stderr, "  mixer load <device> <filename>\n");
+	PX4_INFO("usage:\n");
+	PX4_INFO("  mixer load <device> <filename>\n");
 }
 
 static int
@@ -118,13 +123,32 @@ load(const char *devname, const char *fname)
 		return 1;
 	}
 
+#ifndef __PX4_QURT
+
 	if (load_mixer_file(fname, &buf[0], sizeof(buf)) < 0) {
 		warnx("can't load mixer: %s", fname);
 		return 1;
 	}
-
 	/* XXX pass the buffer to the device */
 	int ret = px4_ioctl(dev, MIXERIOCLOADBUF, (unsigned long)buf);
+#else
+        char newbuf[] = 
+          "R: 4x 10000 10000 10000 0\n"
+          "M: 1\n"
+          "O: 10000 10000 0 -10000 10000\n"
+          "S: 0 4 10000 10000 0 -10000 10000\n"
+          "M: 1\n"
+          "O: 10000 10000 0 -10000 10000\n"
+          "S: 0 5 10000 10000 0 -10000 10000\n"
+          "M: 1\n"
+          "O: 10000 10000 0 -10000 10000\n"
+          "S: 0 6 10000 10000 0 -10000 10000\n"
+          "M: 1\n"
+          "O: 10000 10000 0 -10000 10000\n"
+          "S: 0 7 10000 10000 0 -10000 10000\n";
+	/* XXX pass the buffer to the device */
+	int ret = px4_ioctl(dev, MIXERIOCLOADBUF, (unsigned long)newbuf);
+#endif
 
 	if (ret < 0) {
 		warnx("error loading mixers from %s", fname);

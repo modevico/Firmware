@@ -39,6 +39,8 @@
 
 #pragma once
 
+#define CONFIG_HACK_POLL_TIMEOUT 10
+
 #if defined(__PX4_NUTTX)
 
 #include <nuttx/config.h>

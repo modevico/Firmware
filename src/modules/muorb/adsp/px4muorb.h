@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (C) 2015 Mark Charlebois. All rights reserved.
+ * Copyright (C) 2015 Mark Charlebois. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,29 +30,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
-
 #pragma once
+#include <systemlib/visibility.h>
+#include <stdint.h>
 
-#include <px4_app.h>
-#include "uORB/topics/esc_status.h"
-#include "uORB/topics/vehicle_command.h"
+extern "C" {
+	int px4muorb_orb_initialize() __EXPORT;
 
-class MuorbTestExample {
-public:
-	MuorbTestExample() {};
+	int px4muorb_add_subscriber(const char *name) __EXPORT;
 
-	~MuorbTestExample() {};
+	int px4muorb_remove_subscriber(const char *name) __EXPORT;
 
-	int main();
+	int px4muorb_send_topic_data(const char *name, const uint8_t *data, int data_len_in_bytes) __EXPORT;
 
-	static px4::AppState appState; /* track requests to terminate app */
-private:
-    int DefaultTest();
-    int PingPongTest();
-    int FileReadTest();
-    int uSleepTest();
+	int px4muorb_is_subscriber_present(const char *topic_name, int *status) __EXPORT;
 
-   struct esc_status_s m_esc_status;
-   struct vehicle_command_s m_vc;
+	int px4muorb_receive_msg(int *msg_type, char *topic_name, int topic_name_len, uint8_t *data, int data_len_in_bytes,
+				      int *bytes_returned) __EXPORT;
 
-};
+	int px4muorb_unblock_recieve_msg(void) __EXPORT;
+
+}

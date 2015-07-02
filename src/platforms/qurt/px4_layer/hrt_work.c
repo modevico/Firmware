@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (C) 2015 Mark Charlebois. All rights reserved.
+ * Copyright (C) 2015 Mark Charlebois. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,28 +31,22 @@
  *
  ****************************************************************************/
 
-#pragma once
+#include "hrt_work.h"
+#include <px4_log.h>
+#include <semaphore.h>
+#include <px4_workqueue.h>
 
-#include <px4_app.h>
-#include "uORB/topics/esc_status.h"
-#include "uORB/topics/vehicle_command.h"
+extern sem_t _hrt_work_lock;
 
-class MuorbTestExample {
-public:
-	MuorbTestExample() {};
+void hrt_work_lock()
+{
+	//PX4_INFO("hrt_work_lock");
+	sem_wait(&_hrt_work_lock);
+}
 
-	~MuorbTestExample() {};
+void hrt_work_unlock()
+{
+	//PX4_INFO("hrt_work_unlock");
+	sem_post(&_hrt_work_lock);
+}
 
-	int main();
-
-	static px4::AppState appState; /* track requests to terminate app */
-private:
-    int DefaultTest();
-    int PingPongTest();
-    int FileReadTest();
-    int uSleepTest();
-
-   struct esc_status_s m_esc_status;
-   struct vehicle_command_s m_vc;
-
-};

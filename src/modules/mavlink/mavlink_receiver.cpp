@@ -148,6 +148,7 @@ MavlinkReceiver::~MavlinkReceiver()
 void
 MavlinkReceiver::handle_message(mavlink_message_t *msg)
 {
+        //PX4_WARN("Rx mavlink: %d",msg->msgid);
 	switch (msg->msgid) {
 	case MAVLINK_MSG_ID_COMMAND_LONG:
 		handle_message_command_long(msg);
@@ -1097,6 +1098,8 @@ MavlinkReceiver::handle_message_manual_control(mavlink_message_t *msg)
 		manual.y = man.y / 1000.0f;
 		manual.r = man.r / 1000.0f;
 		manual.z = man.z / 1000.0f;
+
+		//PX4_WARN("Manual.  x: %f, y: %f, r: %f, z: %f",manual.x,manual.y,manual.r,manual.z);
 
 		manual.mode_switch = decode_switch_pos(man.buttons, 0);
 		manual.return_switch = decode_switch_pos(man.buttons, 1);

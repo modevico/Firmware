@@ -200,7 +200,7 @@ static int
 do_save(const char *param_file_name)
 {
 	/* create the file */
-	int fd = open(param_file_name, O_WRONLY | O_CREAT, PX4_O_MODE_666);
+	int fd = px4_open(param_file_name, O_WRONLY | O_CREAT, PX4_O_MODE_666);
 
 	if (fd < 0) {
 		warn("opening '%s' failed", param_file_name);
@@ -208,7 +208,7 @@ do_save(const char *param_file_name)
 	}
 
 	int result = param_export(fd, false);
-	close(fd);
+	px4_close(fd);
 
 	if (result < 0) {
 #ifndef __PX4_QURT
@@ -224,7 +224,7 @@ do_save(const char *param_file_name)
 static int
 do_load(const char *param_file_name)
 {
-	int fd = open(param_file_name, O_RDONLY);
+	int fd = px4_open(param_file_name, O_RDONLY);
 
 	if (fd < 0) {
 		warn("open '%s'", param_file_name);
@@ -232,7 +232,7 @@ do_load(const char *param_file_name)
 	}
 
 	int result = param_load(fd);
-	close(fd);
+	px4_close(fd);
 
 	if (result < 0) {
 		warnx("error importing from '%s'", param_file_name);
@@ -245,7 +245,7 @@ do_load(const char *param_file_name)
 static int
 do_import(const char *param_file_name)
 {
-	int fd = open(param_file_name, O_RDONLY);
+	int fd = px4_open(param_file_name, O_RDONLY);
 
 	if (fd < 0) {
 		warn("open '%s'", param_file_name);
@@ -253,7 +253,7 @@ do_import(const char *param_file_name)
 	}
 
 	int result = param_import(fd);
-	close(fd);
+	px4_close(fd);
 
 	if (result < 0) {
 		warnx("error importing from '%s'", param_file_name);

@@ -66,7 +66,6 @@
 #include <mathlib/mathlib.h>
 #include <mathlib/math/filter/LowPassFilter2p.hpp>
 #include <mavlink/mavlink_log.h>
-#include <platforms/px4_defines.h>
 
 static uint64_t IMUmsec = 0;
 static uint64_t IMUusec = 0;
@@ -84,6 +83,7 @@ static constexpr unsigned ACCEL_SWITCH_HYSTERESIS = 5;	///< Ignore the first few
  *
  * @ingroup apps
  */
+
 extern "C" __EXPORT int ekf_att_pos_estimator_main(int argc, char *argv[]);
 
 __EXPORT uint32_t millis();
@@ -556,15 +556,16 @@ void AttitudePositionEstimatorEKF::task_main()
 	fds[1].events = POLLIN;
 
 	_gps.vel_n_m_s = 0.0f;
-	_gps.vel_e_m_s = 0.0f;
+	_gps.vel_e_m_s = 0.0f; 
 	_gps.vel_d_m_s = 0.0f;
 
-	_task_running = true;
+	_task_running = true; 
 
 	while (!_task_should_exit) {
 
 		/* wait for up to 100ms for data */
-		int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), 100);
+		int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), CONFIG_HACK_POLL_TIMEOUT);
+		//int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), 100);
 
 		/* timed out - periodic check for _task_should_exit, etc. */
 		if (pret == 0) {
@@ -576,7 +577,7 @@ void AttitudePositionEstimatorEKF::task_main()
 			warn("POLL ERR %d, %d", pret, errno);
 			continue;
 		}
-
+		//PX4_WARN("Got sensors combined sem.");
 		perf_begin(_loop_perf);
 		perf_count(_loop_intvl);
 
@@ -634,6 +635,7 @@ void AttitudePositionEstimatorEKF::task_main()
 			/*
 			 *    CHECK IF ITS THE RIGHT TIME TO RUN THINGS ALREADY
 			 */
+
 			if (hrt_elapsed_time(&_filter_start_time) < FILTER_INIT_DELAY) {
 				continue;
 			}
@@ -644,6 +646,7 @@ void AttitudePositionEstimatorEKF::task_main()
 			 *    We run the filter only once all data has been fetched
 			 **/
 
+			//PX4_WARN("cases: %d, %d, %d, %d",_baro_init, _gyro_valid, _accel_valid, _mag_valid);
 			if (_baro_init && _gyro_valid && _accel_valid && _mag_valid) {
 
 				// maintain filtered baro and gps altitudes to calculate weather offset
@@ -704,7 +707,14 @@ void AttitudePositionEstimatorEKF::task_main()
 						continue;
 					}
 
-					// Run EKF data fusion steps
+					/*
+					  static uint64_t tmp_last_ts=0;
+					uint64_t tmp_ts = hrt_absolute_time();
+					PX4_WARN("EKF dt: %lu",(unsigned long) (tmp_ts - tmp_last_ts));
+					tmp_last_ts = tmp_ts;
+					*/
+
+					//Run EKF data fusion steps
 					updateSensorFusion(_gpsIsGood, _newDataMag, _newRangeData, _newHgtData, _newAdsData);
 
 					// Publish attitude estimations
@@ -840,9 +850,10 @@ void AttitudePositionEstimatorEKF::publishAttitude()
 	_att.rate_offsets[1] = _ekf->states[11] / _ekf->dtIMUfilt;
 	_att.rate_offsets[2] = _ekf->states[12] / _ekf->dtIMUfilt;
 
+	//PX4_WARN("Publishing Attitude");
 	/* lazily publish the attitude only once available */
 	if (_att_pub != nullptr) {
-		/* publish the attitude setpoint */
+  		/* publish the attitude setpoint */
 		orb_publish(ORB_ID(vehicle_attitude), _att_pub, &_att);
 
 	} else {
@@ -884,6 +895,7 @@ void AttitudePositionEstimatorEKF::publishLocalPosition()
 		// bad data, abort publication
 		return;
 	}
+	//PX4_WARN("Publishing Local Position");
 
 	/* lazily publish the local position only once available */
 	if (_local_pos_pub != nullptr) {
@@ -950,6 +962,7 @@ void AttitudePositionEstimatorEKF::publishGlobalPosition()
 		return;
 	}
 
+	PX4_WARN("Publishing Global Position");
 	/* lazily publish the global position only once available */
 	if (_global_pos_pub != nullptr) {
 		/* publish the global position */
@@ -1114,7 +1127,7 @@ int AttitudePositionEstimatorEKF::start()
 	_estimator_task = px4_task_spawn_cmd("ekf_att_pos_estimator",
 					 SCHED_DEFAULT,
 					 SCHED_PRIORITY_MAX - 40,
-					 7500,
+					 15000,
 					 (px4_main_t)&AttitudePositionEstimatorEKF::task_main_trampoline,
 					 nullptr);
 
@@ -1244,6 +1257,8 @@ void AttitudePositionEstimatorEKF::pollData()
 
 	int last_gyro_main = _gyro_main;
 
+	//PX4_WARN("EKF SenCombMag1: %lu, %f, %f, %f",_sensor_combined.magnetometer_timestamp,_sensor_combined.magnetometer_ga[0], 
+	//	 _sensor_combined.magnetometer_ga[1],_sensor_combined.magnetometer_ga[2]);
 	if (PX4_ISFINITE(_sensor_combined.gyro_rad_s[0]) &&
 	    PX4_ISFINITE(_sensor_combined.gyro_rad_s[1]) &&
 	    PX4_ISFINITE(_sensor_combined.gyro_rad_s[2]) &&
@@ -1322,7 +1337,6 @@ void AttitudePositionEstimatorEKF::pollData()
 		_newDataMag = false;
 	}
 
-	last_mag = _sensor_combined.magnetometer_timestamp;
 
 	//PX4_INFO("dang: %8.4f %8.4f dvel: %8.4f %8.4f", _ekf->dAngIMU.x, _ekf->dAngIMU.z, _ekf->dVelIMU.x, _ekf->dVelIMU.z);
 
@@ -1498,7 +1512,6 @@ void AttitudePositionEstimatorEKF::pollData()
 		perf_count(_perf_baro);
 	}
 
-	//Update Magnetometer
 	if (_newDataMag) {
 
 		_mag_valid = true;
@@ -1506,6 +1519,7 @@ void AttitudePositionEstimatorEKF::pollData()
 		perf_count(_perf_mag);
 
 		int last_mag_main = _mag_main;
+		const unsigned mag_timeout_us = 200000;
 
 		Vector3f mag0(_sensor_combined.magnetometer_ga[0], _sensor_combined.magnetometer_ga[1],
 			_sensor_combined.magnetometer_ga[2]);
@@ -1513,10 +1527,11 @@ void AttitudePositionEstimatorEKF::pollData()
 		Vector3f mag1(_sensor_combined.magnetometer1_ga[0], _sensor_combined.magnetometer1_ga[1],
 			_sensor_combined.magnetometer1_ga[2]);
 
-		const unsigned mag_timeout_us = 200000;
 
 		/* fail over to the 2nd mag if we know the first is down */
-		if (hrt_elapsed_time(&_sensor_combined.magnetometer_timestamp) < mag_timeout_us &&
+
+		//if (hrt_elapsed_time(&_sensor_combined.magnetometer_timestamp) < mag_timeout_us &&
+		if ((_sensor_combined.magnetometer_timestamp - last_mag) < mag_timeout_us &&
 			_sensor_combined.magnetometer_errcount <= (_sensor_combined.magnetometer1_errcount + MAG_SWITCH_HYSTERESIS) &&
 			mag0.length() > 0.1f) {
 			_ekf->magData.x = mag0.x;
@@ -1549,6 +1564,8 @@ void AttitudePositionEstimatorEKF::pollData()
 		}
 	}
 
+	last_mag = _sensor_combined.magnetometer_timestamp;
+
 	//Update range data
 	orb_check(_distance_sub, &_newRangeData);
 
@@ -1563,6 +1580,12 @@ void AttitudePositionEstimatorEKF::pollData()
 			_newRangeData = false;
 		}
 	}
+/*
+	PX4_WARN("EKF mag  : %f, %f, %f",_ekf->magData.x ,_ekf->magData.y ,_ekf->magData.z); 
+	PX4_WARN("EKF accel: %f, %f, %f",_ekf->accel.x,_ekf->accel.y,_ekf->accel.z);
+	PX4_WARN("EKF gyro : %f, %f, %f",_ekf->angRate.x,_ekf->angRate.y,_ekf->angRate.z);
+	PX4_WARN("EKF baroH: %f",_ekf->baroHgt);
+*/
 }
 
 int AttitudePositionEstimatorEKF::trip_nan()
@@ -1627,13 +1650,15 @@ int ekf_att_pos_estimator_main(int argc, char *argv[])
 			PX4_ERR("already running");
 			return 1;
 		}
-
+		PX4_WARN("Instantiating EKF.");
 		estimator::g_estimator = new AttitudePositionEstimatorEKF();
+		PX4_WARN("After instantiating EKF.");
 
 		if (estimator::g_estimator == nullptr) {
 			PX4_ERR("alloc failed");
 			return 1;
 		}
+		PX4_WARN("Starting EKF.");
 
 		if (OK != estimator::g_estimator->start()) {
 			delete estimator::g_estimator;
@@ -1642,6 +1667,7 @@ int ekf_att_pos_estimator_main(int argc, char *argv[])
 			return 1;
 		}
 
+		PX4_WARN("Successful EKF.");
 		/* avoid memory fragmentation by not exiting start handler until the task has fully started */
 		while (estimator::g_estimator == nullptr || !estimator::g_estimator->task_running()) {
 			usleep(50000);
@@ -1649,7 +1675,6 @@ int ekf_att_pos_estimator_main(int argc, char *argv[])
 		}
 
 		PX4_INFO(" ");
-
 		return 0;
 	}
 

@@ -83,15 +83,7 @@ static void hrt_unlock(void)
  */
 hrt_abstime hrt_absolute_time(void)
 {
-
-   return get_abs_time_in_us();
-/*
-	struct timespec ts;
-
-	// FIXME - clock_gettime unsupported in QuRT
-	//clock_gettime(CLOCK_MONOTONIC, &ts);
-	return ts_to_abstime(&ts);
-*/
+	return get_abs_time_in_us();
 }
 
 /*

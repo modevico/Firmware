@@ -384,7 +384,7 @@ VDev::poll(file_t *filep, px4_pollfd_struct_t *fds, bool setup)
 void
 VDev::poll_notify(pollevent_t events)
 {
-	PX4_DEBUG("VDev::poll_notify events = %0x", events);
+        PX4_DEBUG("VDev::poll_notify events = %0x", events);
 
 	/* lock against poll() as well as other wakeups */
 	lock();

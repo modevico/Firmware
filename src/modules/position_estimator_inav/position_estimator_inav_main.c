@@ -46,8 +46,8 @@
 #include <fcntl.h>
 #include <string.h>
 #include <px4_config.h>
-#include <sys/prctl.h>
-#include <termios.h>
+//#include <sys/prctl.h>
+//#include <termios.h>
 #include <math.h>
 #include <float.h>
 #include <uORB/uORB.h>
@@ -118,10 +118,10 @@ static inline int max(int val1, int val2)
 static void usage(const char *reason)
 {
 	if (reason) {
-		fprintf(stderr, "%s\n", reason);
+		PX4_INFO("%s\n", reason);
 	}
 
-	fprintf(stderr, "usage: position_estimator_inav {start|stop|status} [-v]\n\n");
+	PX4_INFO("usage: position_estimator_inav {start|stop|status} [-v]\n\n");
 	return;
 }
 
@@ -152,9 +152,11 @@ int position_estimator_inav_main(int argc, char *argv[])
 			inav_verbose_mode = true;
 		}
 
+		PX4_WARN("Spawning thread.  argc = %d",argc);
 		thread_should_exit = false;
 		position_estimator_inav_task = px4_task_spawn_cmd("position_estimator_inav",
-					       SCHED_DEFAULT, SCHED_PRIORITY_MAX - 5, 5000,
+					       SCHED_DEFAULT, SCHED_PRIORITY_MAX - 5, 
+					       7500,
 					       position_estimator_inav_thread_main,
 					       (argv && argc > 2) ? (char * const *) &argv[2] : (char * const *) NULL);
 		return 0;
@@ -192,6 +194,7 @@ static void write_debug_log(const char *msg, float dt, float x_est[2], float y_e
 	float corr_vision[3][2], float w_xy_vision_p, float w_z_vision_p, float w_xy_vision_v)
 {
 	return;
+#if 0
 	FILE *f = fopen(PX4_ROOTFSDIR"/fs/microsd/inav.log", "a");
 
 	if (f) {
@@ -215,6 +218,7 @@ static void write_debug_log(const char *msg, float dt, float x_est[2], float y_e
 
 	fsync(fileno(f));
 	fclose(f);
+#endif
 }
 
 /****************************************************************************
@@ -222,6 +226,7 @@ static void write_debug_log(const char *msg, float dt, float x_est[2], float y_e
  ****************************************************************************/
 int position_estimator_inav_thread_main(int argc, char *argv[])
 {
+	PX4_WARN("Entering POS Thread main");
 	int mavlink_fd;
 	mavlink_fd = px4_open(MAVLINK_LOG_DEVICE, 0);
 
@@ -388,7 +393,8 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 	thread_running = true;
 
 	while (wait_baro && !thread_should_exit) {
-		int ret = px4_poll(fds_init, 1, 1000);
+		//int ret = px4_poll(fds_init, 1, 1000);
+		int ret = px4_poll(fds_init, 1, CONFIG_HACK_POLL_TIMEOUT);
 
 		if (ret < 0) {
 			/* poll error */
@@ -403,7 +409,7 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 
 					/* mean calculation over several measurements */
 					if (baro_init_cnt < baro_init_num) {
-						if (isfinite(sensor.baro_alt_meter)) {
+						if (PX4_ISFINITE(sensor.baro_alt_meter)) {
 							baro_offset += sensor.baro_alt_meter;
 							baro_init_cnt++;
 						}
@@ -427,7 +433,8 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 	};
 
 	while (!thread_should_exit) {
-		int ret = px4_poll(fds, 1, 20); // wait maximal 20 ms = 50 Hz minimum rate
+		//int ret = px4_poll(fds, 1, 20); // wait maximal 20 ms = 50 Hz minimum rate
+		int ret = px4_poll(fds, 1, CONFIG_HACK_POLL_TIMEOUT); // wait maximal 20 ms = 50 Hz minimum rate
 		hrt_abstime t = hrt_absolute_time();
 
 		if (ret < 0) {
@@ -441,7 +448,6 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 			/* vehicle attitude */
 			orb_copy(ORB_ID(vehicle_attitude), vehicle_attitude_sub, &att);
 			attitude_updates++;
-
 			bool updated;
 
 			/* parameter update */

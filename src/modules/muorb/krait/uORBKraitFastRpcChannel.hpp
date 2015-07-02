@@ -38,7 +38,7 @@
 #include <string>
 #include <pthread.h>
 #include "uORB/uORBCommunicator.hpp"
-#include "muorbKraitFastRpcWrapper.hpp"
+#include "px4muorb_KraitRpcWrapper.hpp"
 
 namespace uORB
 {
@@ -119,23 +119,21 @@ public:
 private: // data members
 	static uORB::KraitFastRpcChannel _Instance;
 	uORBCommunicator::IChannelRxHandler *_RxHandler;
-	pthread_t _RecvThread;
+        pthread_t   _RecvThread;
 	bool _ThreadStarted;
-	bool _ShouldExit;
+        bool _ThreadShouldExit;
 
 	static const int32_t _CONTROL_MSG_TYPE_ADD_SUBSCRIBER = 1;
 	static const int32_t _CONTROL_MSG_TYPE_REMOVE_SUBSCRIBER = 2;
 	static const int32_t _DATA_MSG_TYPE = 3;
 
-	muorb::KraitFastRpcWrapper _KraitWrapper;
-
-
+	px4muorb::KraitRpcWrapper _KraitWrapper;
 
 private://class members.
 	/// constructor.
 	KraitFastRpcChannel();
 
-	static void thread_start(void *handler);
+	static void*  thread_start(void *handler);
 
 	void fastrpc_recv_thread();
 

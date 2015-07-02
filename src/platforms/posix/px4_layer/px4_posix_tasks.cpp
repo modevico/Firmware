@@ -279,6 +279,7 @@ void px4_show_tasks()
 
 __BEGIN_DECLS
 
+unsigned long px4_getpid();
 unsigned long px4_getpid()
 {
 	return (unsigned long)pthread_self();

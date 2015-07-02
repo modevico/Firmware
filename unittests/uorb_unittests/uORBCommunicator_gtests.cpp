@@ -1,3 +1,4 @@
+
 /****************************************************************************
  *
  * Copyright (c) 2015 Mark Charlebois. All rights reserved.
@@ -251,7 +252,6 @@ namespace uORB_test
      _pub_ptr = orb_advertise(ORB_ID(topicB), &_topicB);
      PX4_INFO( "publist handle: 0x%08lx", (unsigned long)_pub_ptr );
      ASSERT_TRUE( _pub_ptr != nullptr ) << "Failed to advertize uORB Topic topicB: errno: " << errno;
-
      //step 3.
      c = _comm_channel.get_interface_counters( "topicB" );
      ASSERT_EQ( c._send_messageCount, 1 );
@@ -443,7 +443,6 @@ namespace uORB_test
      // publish a new data and check to see that the data is received on the remote.
      topicA.val = 15;
      ASSERT_EQ( orb_publish( ORB_ID(topicA), pub_topicA_ptr, &topicA), OK );
-
      // check to see that the subscriber got a new value.
      ASSERT_EQ( orb_copy(ORB_ID(topicA), sub_topicA_fd, &topicALocal), OK ) << "copy(1) failed: " << errno;
      ASSERT_EQ( topicA.val, topicALocal.val )

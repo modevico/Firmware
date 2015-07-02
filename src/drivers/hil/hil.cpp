@@ -404,7 +404,8 @@ HIL::task_main()
 		}
 
 		/* sleep waiting for data, but no more than a second */
-		int ret = px4_poll(&fds[0], 2, 1000);
+		int ret = px4_poll(&fds[0], 2, CONFIG_HACK_POLL_TIMEOUT);
+		//int ret = px4_poll(&fds[0], 2, 1000);
 
 		/* this would be bad... */
 		if (ret < 0) {
@@ -859,8 +860,8 @@ extern "C" __EXPORT int hil_main(int argc, char *argv[]);
 
 static void
 usage() {
-	fprintf(stderr, "HIL: unrecognized command, try:\n");
-	fprintf(stderr, "  mode_pwm, mode_gpio_serial, mode_pwm_serial, mode_pwm_gpio, mode_port2_pwm8, mode_port2_pwm12, mode_port2_pwm16\n");
+	PX4_WARN( "HIL: unrecognized command, try:\n");
+	PX4_WARN( "  mode_pwm, mode_gpio_serial, mode_pwm_serial, mode_pwm_gpio, mode_port2_pwm8, mode_port2_pwm12, mode_port2_pwm16\n");
 }
 
 int

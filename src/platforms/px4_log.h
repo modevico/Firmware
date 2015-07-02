@@ -57,13 +57,42 @@
 #include <px4_defines.h>
 
 __BEGIN_DECLS
-__EXPORT extern uint64_t hrt_absolute_time(void);
-
 // Used to silence unused variable warning
 static inline void do_nothing(int level, ...)
 {
 	(void)level;
 }
+__END_DECLS
+
+#ifdef __PX4_QURT
+#include "HAP_farf.h"
+
+#define __FARF_omit(level, ...)   do_nothing(level, __VA_ARGS__)
+
+#define __FARF_log(level, ...)   { \
+	FARF( level, __VA_ARGS__);\
+}
+
+#define __FARF_log_verbose(level, ...)   { \
+	FARF(level, __VA_ARGS__);\
+}
+
+//#define PX4_DEBUG(...)	__FARF_log(HIGH, __VA_ARGS__)
+#define PX4_DEBUG(...)	__FARF_omit(HIGH, __VA_ARGS__)
+#define PX4_INFO(...) 	__FARF_log(HIGH, __VA_ARGS__)
+#define PX4_WARN(...) 	__FARF_log_verbose(HIGH, __VA_ARGS__)
+#define PX4_ERR(...)	__FARF_log_verbose(HIGH, __VA_ARGS__)
+
+#define PX4_DEBUG_PRINTF( x ) \
+     for( int i = 0; i < 5; ++i ) \
+     { \
+       PX4_WARN( "[%s][%d] Debug Step [%d] Line[%d]", __FILENAME__, i, x, __LINE__ ); \
+       usleep( 1000000 ); \
+     }
+#else
+
+__BEGIN_DECLS
+__EXPORT extern uint64_t hrt_absolute_time(void);
 
 #define _PX4_LOG_LEVEL_ALWAYS		0
 #define _PX4_LOG_LEVEL_PANIC		1
@@ -306,4 +335,5 @@ __EXPORT extern int __px4_log_level_current;
 
 #endif
 __END_DECLS
+#endif
 #endif
