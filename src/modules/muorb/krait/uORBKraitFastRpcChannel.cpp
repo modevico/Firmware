@@ -112,9 +112,6 @@ int16_t uORB::KraitFastRpcChannel::send_message(const char *messageName, int32_t
 void uORB::KraitFastRpcChannel::Start()
 {
 	_ThreadStarted = true;
-<<<<<<< HEAD
-	pthread_create(&_RecvThread, NULL, thread_start, this);
-=======
         _ThreadShouldExit = false;
         pthread_attr_t recv_thread_attr;
         pthread_attr_init( &recv_thread_attr );
@@ -134,24 +131,10 @@ void uORB::KraitFastRpcChannel::Start()
             pthread_setname_np( _RecvThread, "muorb_krait_receiver" );
         }
         pthread_attr_destroy(&recv_thread_attr);
->>>>>>> px4_latest_es1.1_release
 }
 
 void uORB::KraitFastRpcChannel::Stop()
 {
-<<<<<<< HEAD
-	_ShouldExit = true;
-	_KraitWrapper.UnblockReceiveData();
-	PX4_DEBUG("After calling krait_wrapper_unlock_receive_Data...\n");
-	pthread_join(_RecvThread, NULL);
-	PX4_DEBUG("*** After calling thread wait...\n");
-	_ThreadStarted = false;
-	_ShouldExit = false;
-}
-
-
-void uORB::KraitFastRpcChannel::thread_start(void *handler)
-=======
 	//PX4_DEBUG( "***** Before calling destroy on the thread....\n" );
 	//_RecvThread.destroy();
 	//PX4_DEBUG( "***** After calling destroy on the thread....\n" );
@@ -166,15 +149,11 @@ void uORB::KraitFastRpcChannel::thread_start(void *handler)
 
 
 void*  uORB::KraitFastRpcChannel::thread_start(void *handler)
->>>>>>> px4_latest_es1.1_release
 {
 	if (handler != nullptr) {
 		((uORB::KraitFastRpcChannel *)handler)->fastrpc_recv_thread();
 	}
-<<<<<<< HEAD
-=======
         return 0;
->>>>>>> px4_latest_es1.1_release
 }
 
 void uORB::KraitFastRpcChannel::fastrpc_recv_thread()
@@ -186,11 +165,7 @@ void uORB::KraitFastRpcChannel::fastrpc_recv_thread()
 	int32_t  data_length = 0;
 	uint8_t *data = nullptr;
 
-<<<<<<< HEAD
-	while (!_ShouldExit) {
-=======
 	while (!_ThreadShouldExit ) {
->>>>>>> px4_latest_es1.1_release
 		// call the fastrpc recv data call.
 		//uorb_fastrpc_recieve( &type, &name_len, name, &data_length, data );
 		rc = _KraitWrapper.ReceiveData(&type, &name, &data_length, &data);
