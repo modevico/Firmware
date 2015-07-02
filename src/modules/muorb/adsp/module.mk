@@ -38,7 +38,6 @@
 
 ifeq ($(PX4_TARGET_OS),qurt)
 
-<<<<<<< HEAD
 SRCS		= \
 		  muorb_fastrpc.cpp \
 		  uORBFastRpcChannel.cpp
