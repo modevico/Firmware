@@ -49,6 +49,9 @@ SRCS		 	= commander.cpp \
 			airspeed_calibration.cpp \
 			esc_calibration.cpp \
 			PreflightCheck.cpp
+ifeq ($(PX4_TARGET_OS),qurt)
+SRCS += commander_led.cpp 
+endif
 
 MODULE_STACKSIZE = 5000
 

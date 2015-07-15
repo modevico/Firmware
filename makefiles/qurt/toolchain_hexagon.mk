@@ -35,6 +35,14 @@
 
 #$(info TOOLCHAIN  gnu-arm-eabi)
 
+#
+# Stop making if ADSP_LIB_ROOT is not set. This defines the path to
+# DspAL headers and driver headers
+#
+ifndef DSPAL_ROOT
+$(error DSPAL_ROOT is not set)
+endif
+
 # Toolchain commands. Normally only used inside this file.
 #
 HEXAGON_TOOLS_ROOT	 = /opt/6.4.03
@@ -115,8 +123,10 @@ ARCHDEFINES		+= -DCONFIG_ARCH_BOARD_$(CONFIG_BOARD) \
 			    -D__EXPORT= \
 			    -Drestrict= \
                             -D_DEBUG \
-			    -I$(PX4_BASE)/../dspal/include \
-			    -I$(PX4_BASE)/../dspal/sys \
+			    -I$(DSPAL_ROOT)/ \
+			    -I$(DSPAL_ROOT)/dspal/include \
+			    -I$(DSPAL_ROOT)/dspal/sys \
+			    -I$(DSPAL_ROOT)/dspal/sys/sys \
 			    -I$(HEXAGON_TOOLS_ROOT)/gnu/hexagon/include \
 			    -I$(PX4_BASE)/src/lib/eigen \
 			    -I$(PX4_BASE)/src/platforms/qurt/include \

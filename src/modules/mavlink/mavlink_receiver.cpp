@@ -1099,7 +1099,7 @@ MavlinkReceiver::handle_message_manual_control(mavlink_message_t *msg)
 		manual.r = man.r / 1000.0f;
 		manual.z = man.z / 1000.0f;
 
-		//PX4_WARN("Manual.  x: %f, y: %f, r: %f, z: %f",manual.x,manual.y,manual.r,manual.z);
+		//PX4_DEBUG("Manual.  x: %f, y: %f, r: %f, z: %f",manual.x,manual.y,manual.r,manual.z);
 
 		manual.mode_switch = decode_switch_pos(man.buttons, 0);
 		manual.return_switch = decode_switch_pos(man.buttons, 1);

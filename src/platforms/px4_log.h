@@ -37,8 +37,12 @@
  */
 
 #pragma once
+static inline void do_nothing(int level, ...)
+{
+	(void)level;
+}
 
-#define __px4_log_omit(level, ...)   { }
+#define __px4_log_omit(level, FMT, ...)   do_nothing(level, ##__VA_ARGS__)
 
 #define __px4_log(level, ...)   { \
 	printf("%-5s ", level);\
@@ -55,7 +59,8 @@
 #include "HAP_farf.h"
 //#define FARF printf
 
-#define __FARF_omit(level, ...)   { }
+//#define __FARF_omit(level, ...)   { }
+#define __FARF_omit(level, FMT, ...)   do_nothing(level, ##__VA_ARGS__)
 
 #define __FARF_log(level, ...)   { \
 	FARF( level, __VA_ARGS__);\
@@ -65,8 +70,8 @@
 	FARF(level, __VA_ARGS__);\
 }
 
-//#define PX4_DEBUG(...)	__FARF_log(HIGH, __VA_ARGS__)
-#define PX4_DEBUG(...)	__FARF_omit(HIGH, __VA_ARGS__)
+#define PX4_DEBUG(...)	__FARF_log_verbose(HIGH, __VA_ARGS__)
+//#define PX4_DEBUG(...)	__FARF_omit(HIGH, __VA_ARGS__)
 #define PX4_INFO(...) 	__FARF_log(HIGH, __VA_ARGS__)
 #define PX4_WARN(...) 	__FARF_log_verbose(HIGH, __VA_ARGS__)
 #define PX4_ERR(...)	__FARF_log_verbose(HIGH, __VA_ARGS__)
@@ -88,7 +93,8 @@
 	printf(" (file %s line %d)\n", __FILE__, __LINE__);\
 }
 
-#define PX4_DEBUG(...) 	__px4_log_omit("DEBUG", __VA_ARGS__)
+//#define PX4_DEBUG(...) 	__px4_log_omit("DEBUG", __VA_ARGS__)
+#define PX4_DEBUG(...) 	__px4_log_verbose("DEBUG", __VA_ARGS__)
 #define PX4_INFO(...) 	__px4_log("INFO",  __VA_ARGS__)
 #define PX4_WARN(...) 	__px4_log_verbose("WARN",  __VA_ARGS__)
 #define PX4_ERR(...)	__px4_log_verbose("ERROR", __VA_ARGS__)

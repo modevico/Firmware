@@ -60,9 +60,9 @@ int MuorbTestExample::main()
 {
 	int rc;
 	appState.setRunning(true);
-	//rc = PingPongTest();
+	rc = PingPongTest();
 	//rc = FileReadTest();
-	rc = uSleepTest();
+	//rc = uSleepTest();
 	appState.setRunning(false);
 	return rc;
 }
@@ -138,17 +138,19 @@ int MuorbTestExample::PingPongTest()
 
 	while (!appState.exitRequested()) {
 
-		PX4_DEBUG("[%d]  Doing work...", i);
-		bool updated = false;
+		//PX4_DEBUG("[%d]  Doing work...", i);
+		bool updated = true;
 
-		if (orb_check(sub_vc, &updated) == 0) {
+		//if (orb_check(sub_vc, &updated) == 0) {
+		if ( true ) {
 			if (updated) {
-				PX4_WARN("[%d]vechile command status is updated... reading new value", i);
+				//PX4_WARN("[%d]vechile command status is updated... reading new value", i);
+                                m_vc = m_vc;
 
-				if (orb_copy(ORB_ID(vehicle_command), sub_vc, &m_vc) != 0) {
-					PX4_ERR("[%d]Error calling orb copy for vechicle... ", i);
-					break;
-				}
+				//if (orb_copy(ORB_ID(vehicle_command), sub_vc, &m_vc) != 0) {
+				//	PX4_ERR("[%d]Error calling orb copy for vechicle... ", i);
+				//	break;
+				//}
 
 				if (orb_publish(ORB_ID(esc_status), pub_id_esc_status, &m_esc_status) == PX4_ERROR) {
 					PX4_ERR("[%d]Error publishing the esc_status message", i);
@@ -165,7 +167,7 @@ int MuorbTestExample::PingPongTest()
 		}
 
 		// sleep for 1 sec.
-		usleep(1000000);
+		usleep(10);
 
 		++i;
 	}

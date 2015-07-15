@@ -614,7 +614,7 @@ MulticopterAttitudeControl::control_attitude(float dt)
 
 	_thrust_sp = _v_att_sp.thrust;
 
-	//PX4_WARN("thrust_sp: %f",_thrust_sp);
+	//PX4_DEBUG("thrust_sp: %f",_thrust_sp);
 	/* construct attitude setpoint rotation matrix */
 	math::Matrix<3, 3> R_sp;
 	R_sp.set(_v_att_sp.R_body);
@@ -773,8 +773,8 @@ MulticopterAttitudeControl::task_main()
 	while (!_task_should_exit) {
 
 		/* wait for up to 100ms for data */
-		int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), CONFIG_HACK_POLL_TIMEOUT);
-		//int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), 100);
+		//int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), CONFIG_HACK_POLL_TIMEOUT);
+		int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), 100);
 
 		/* timed out - periodic check for _task_should_exit */
 		if (pret == 0)
@@ -879,11 +879,13 @@ MulticopterAttitudeControl::task_main()
 				_controller_status.yaw_rate_integ = _rates_int(2);
 				_controller_status.timestamp = hrt_absolute_time();
 
-				//PX4_WARN("Actuators0 Circuit Breaker = %d",_actuators_0_circuit_breaker_enabled); 
+				//PX4_DEBUG("Sending actuators.control: ts(%lu), %f, %f, %f, %f",
+				//	 (unsigned long) _actuators.timestamp,  _actuators.control[0],_actuators.control[1],_actuators.control[2],_actuators.control[3]);
+				//PX4_DEBUG("Actuators0 Circuit Breaker = %d",_actuators_0_circuit_breaker_enabled); 
 
 				if (!_actuators_0_circuit_breaker_enabled) {
 					if (_actuators_0_pub != nullptr) { 
-						//PX4_WARN("Publishing actuator_controls topic.");
+						//PX4_DEBUG("Publishing actuator_controls topic.");
 						orb_publish(_actuators_id, _actuators_0_pub, &_actuators);
 						perf_end(_controller_latency_perf);
 

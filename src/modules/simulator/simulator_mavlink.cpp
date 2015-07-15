@@ -102,7 +102,7 @@ void Simulator::pack_actuator_message(mavlink_hil_controls_t &actuator_msg) {
 void Simulator::send_controls() {
 	mavlink_hil_controls_t msg;
 	pack_actuator_message(msg);
-	//PX4_WARN("Sending HIL_CONTROLS msg");
+	//PX4_DEBUG("Sending HIL_CONTROLS msg");
 	send_mavlink_message(MAVLINK_MSG_ID_HIL_CONTROLS, &msg, 200);
 }
 
@@ -112,7 +112,7 @@ static void fill_rc_input_msg(struct rc_input_values *rc, mavlink_rc_channels_t 
 	rc->channel_count = rc_channels->chancount;
 	rc->rssi = rc_channels->rssi;
 
-/*	PX4_WARN("RC: %d, %d, %d, %d, %d, %d, %d, %d",
+/*	PX4_DEBUG("RC: %d, %d, %d, %d, %d, %d, %d, %d",
 		 rc_channels->chan1_raw,
 		 rc_channels->chan2_raw,
 		 rc_channels->chan3_raw,
@@ -273,7 +273,7 @@ void Simulator::poll_actuators() {
 	bool updated;
 	orb_check(_actuator_outputs_sub, &updated);
 	if(updated) {
-	  //PX4_WARN("Received actuator_output0 orb_topic");
+	  //PX4_DEBUG("Received actuator_output0 orb_topic");
 		orb_copy(ORB_ID(actuator_outputs), _actuator_outputs_sub, &_actuators);
 	}
 }
@@ -580,22 +580,23 @@ int Simulator::publish_sensor_topics(mavlink_hil_sensor_t *imu) {
         uint64_t timestamp = hrt_absolute_time();
 
         if((imu->fields_updated & 0x1FFF)!=0x1FFF) {
-	   	        PX4_DEBUG("All sensor fields in mavlink HIL_SENSOR packet not updated.  Got %08x",imu->fields_updated);
+		//PX4_DEBUG("All sensor fields in mavlink HIL_SENSOR packet not updated.  Got %08x",imu->fields_updated);
         }
 	/*
 	  static int count=0;
 	  static uint64_t last_timestamp=0;
 	  count++;
-	  if (!(count % 200)) {
-		PX4_WARN("TIME : %lu,   dt: %lu",
-			 (unsigned long) timestamp,(unsigned long) timestamp - (unsigned long) last_timestamp);
-		PX4_WARN("IMU  : %f %f %f",imu->xgyro,imu->ygyro,imu->zgyro);
-		PX4_WARN("ACCEL: %f %f %f",imu->xacc,imu->yacc,imu->zacc);
-		PX4_WARN("MAG  : %f %f %f",imu->xmag,imu->ymag,imu->zmag);
-		PX4_WARN("BARO : %f %f %f",imu->abs_pressure,imu->pressure_alt,imu->temperature);
-	}
+	  if (!(count % 400)) {
+		  PX4_DEBUG("Time    imu: %9lu    hrt: %9lu     dt: %lu               ", (unsigned long) imu->time_usec, (unsigned long) timestamp, (unsigned long) timestamp - (unsigned long) last_timestamp);
+		  PX4_DEBUG("Gyro.     x: %+8.4f,     y: %+8.4f,   z: %+8.4f             ", imu->xgyro*180.0/M_PI_F,imu->ygyro*180.0/M_PI_F,imu->zgyro*180.0/M_PI_F);
+		  PX4_DEBUG("Accel.    x: %+8.4f,     y: %+8.4f,   z: %+8.4f             ", imu->xacc,imu->yacc,imu->zacc);
+		  PX4_DEBUG("Mag.      x: %+8.4f,     y: %+8.4f,   z: %+8.4f             ", imu->xmag,imu->ymag,imu->zmag);
+		  PX4_DEBUG("Baro.     x: %+8.4f,     y: %+8.4f,   z: %+8.4f             ", imu->abs_pressure,imu->pressure_alt,imu->temperature);
+	  
+		  }
 	last_timestamp = timestamp;
 	*/
+
 	/* gyro */
 	{
 		struct gyro_report gyro;

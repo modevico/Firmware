@@ -133,7 +133,7 @@ int Simulator::start(int argc, char *argv[])
 
 static void usage()
 {
-	PX4_WARN("Usage: simulator {start -[sc] |stop}");
+	PX4_WARN("Usage: simulator {start -[sp] |stop}");
 	PX4_WARN("Simulate raw sensors:     simulator start -s");
 	PX4_WARN("Publish sensors combined: simulator start -p");
 }
@@ -209,7 +209,7 @@ __EXPORT void led_off(int led)
 {
 	if (led == 1 || led == 0)
 	{
-		PX4_DEBUG("LED%d_OFF", led);
+		//PX4_DEBUG("LED%d_OFF", led);
 		_led_state[led] = false;
 	}
 }

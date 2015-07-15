@@ -72,6 +72,9 @@ endif
 ifeq ($(CONFIG),qurt_hil)
 SRCS +=			commands_hil.c
 endif
+ifeq ($(CONFIG),qurt_adsp)
+SRCS +=			commands_adsp.c
+endif
 
 
 MAXOPTIMIZATION	 = -Os

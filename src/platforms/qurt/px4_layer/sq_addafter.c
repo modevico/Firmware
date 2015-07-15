@@ -57,15 +57,13 @@
  ************************************************************/
 
 void sq_addafter(FAR sq_entry_t *prev, FAR sq_entry_t *node,
-                 sq_queue_t *queue)
+		 sq_queue_t *queue)
 {
-  if (!queue->head || prev == queue->tail)
-    {
-      sq_addlast(node, queue);
-    }
-  else
-    {
-      node->flink = prev->flink;
-      prev->flink = node;
-    }
+	if (!queue->head || prev == queue->tail) {
+		sq_addlast(node, queue);
+
+	} else {
+		node->flink = prev->flink;
+		prev->flink = node;
+	}
 }

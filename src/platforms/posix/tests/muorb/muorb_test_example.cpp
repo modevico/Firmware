@@ -84,7 +84,7 @@ int  MuorbTestExample::DefaultTest()
 
         while (!appState.exitRequested() && i<100) {
 
-                PX4_DEBUG("[%d]  Doing work...", i );
+                //PX4_DEBUG("[%d]  Doing work...", i );
                 if( orb_publish( ORB_ID( esc_status ), pub_id, &m_esc_status ) == PX4_ERROR )
                 {
                    PX4_ERR( "[%d]Error publishing the esc status message for iter", i );
@@ -93,7 +93,8 @@ int  MuorbTestExample::DefaultTest()
                 bool updated = false;
                 if( orb_check( sub_vc, &updated ) == 0 )
                 {
-                    if( updated )
+                    //if( updated )
+                    if( false )
                     {
                        PX4_DEBUG( "[%d]Vechicle Status is updated... reading new value", i );
                        if( orb_copy( ORB_ID( vehicle_command ), sub_vc, &m_vc ) != 0 )
@@ -109,7 +110,7 @@ int  MuorbTestExample::DefaultTest()
                     }
                     else
                     {
-                       PX4_DEBUG( "[%d] VC topic is not updated", i );
+                       //PX4_DEBUG( "[%d] VC topic is not updated", i );
                     }
                 }
                 else
@@ -146,13 +147,13 @@ int MuorbTestExample::PingPongTest()
 
         while (!appState.exitRequested() ) {
 
-                PX4_INFO("[%d]  Doing work...", i );
+                //PX4_INFO("[%d]  Doing work...", i );
                 bool updated = false;
                 if( orb_check( sub_esc_status, &updated ) == 0 )
                 {
                     if( updated )
                     {
-                       PX4_INFO( "[%d]ESC status is updated... reading new value", i );
+                       //PX4_INFO( "[%d]ESC status is updated... reading new value", i );
                        if( orb_copy( ORB_ID( esc_status ), sub_esc_status, &m_esc_status ) != 0 )
                        {
                            PX4_ERR( "[%d]Error calling orb copy for esc status... ", i );
@@ -160,13 +161,13 @@ int MuorbTestExample::PingPongTest()
                        }
                        if( orb_publish( ORB_ID( vehicle_command ), pub_id_vc, &m_vc ) == PX4_ERROR )
                        {
-                          PX4_ERR( "[%d]Error publishing the vechile command message", i );
-                          break;
+                         PX4_ERR( "[%d]Error publishing the vechile command message", i );
+                        break;
                        }
                     }
                     else
                     {
-                       PX4_INFO( "[%d] esc status topic is not updated", i );
+                       //PX4_INFO( "[%d] esc status topic is not updated", i );
                     }
                 }
                 else
@@ -175,7 +176,7 @@ int MuorbTestExample::PingPongTest()
                     break;
                 }
                 // sleep for 1 sec.
-                usleep( 1000000 ); 
+                usleep( 1000 ); 
 
                 ++i;
         }

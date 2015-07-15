@@ -393,8 +393,8 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 	thread_running = true;
 
 	while (wait_baro && !thread_should_exit) {
-		//int ret = px4_poll(fds_init, 1, 1000);
-		int ret = px4_poll(fds_init, 1, CONFIG_HACK_POLL_TIMEOUT);
+		int ret = px4_poll(fds_init, 1, 1000);
+		//int ret = px4_poll(fds_init, 1, CONFIG_HACK_POLL_TIMEOUT);
 
 		if (ret < 0) {
 			/* poll error */
@@ -433,8 +433,8 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 	};
 
 	while (!thread_should_exit) {
-		//int ret = px4_poll(fds, 1, 20); // wait maximal 20 ms = 50 Hz minimum rate
-		int ret = px4_poll(fds, 1, CONFIG_HACK_POLL_TIMEOUT); // wait maximal 20 ms = 50 Hz minimum rate
+		int ret = px4_poll(fds, 1, 20); // wait maximal 20 ms = 50 Hz minimum rate
+		//int ret = px4_poll(fds, 1, CONFIG_HACK_POLL_TIMEOUT); // wait maximal 20 ms = 50 Hz minimum rate
 		hrt_abstime t = hrt_absolute_time();
 
 		if (ret < 0) {

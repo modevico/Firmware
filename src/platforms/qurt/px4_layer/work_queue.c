@@ -105,29 +105,29 @@
 
 int work_queue(int qid, struct work_s *work, worker_t worker, void *arg, uint32_t delay)
 {
-  struct wqueue_s *wqueue = &g_work[qid];
+	struct wqueue_s *wqueue = &g_work[qid];
 
-  //DEBUGASSERT(work != NULL && (unsigned)qid < NWORKERS);
+	//DEBUGASSERT(work != NULL && (unsigned)qid < NWORKERS);
 
-  /* First, initialize the work structure */
+	/* First, initialize the work structure */
 
-  work->worker = worker;           /* Work callback */
-  work->arg    = arg;              /* Callback argument */
-  work->delay  = delay;            /* Delay until work performed */
+	work->worker = worker;           /* Work callback */
+	work->arg    = arg;              /* Callback argument */
+	work->delay  = delay;            /* Delay until work performed */
 
-  /* Now, time-tag that entry and put it in the work queue.  This must be
-   * done with interrupts disabled.  This permits this function to be called
-   * from with task logic or interrupt handlers.
-   */
+	/* Now, time-tag that entry and put it in the work queue.  This must be
+	 * done with interrupts disabled.  This permits this function to be called
+	 * from with task logic or interrupt handlers.
+	 */
 
-  work_lock(qid);
-  work->qtime  = clock_systimer(); /* Time work queued */
+	work_lock(qid);
+	work->qtime  = clock_systimer(); /* Time work queued */
 
-  dq_addlast((dq_entry_t *)work, &wqueue->q);
-  px4_task_kill(wqueue->pid, SIGALRM);      /* Wake up the worker thread */
+	dq_addlast((dq_entry_t *)work, &wqueue->q);
+	px4_task_kill(wqueue->pid, SIGALRM);      /* Wake up the worker thread */
 
-  work_unlock(qid);
-  return PX4_OK;
+	work_unlock(qid);
+	return PX4_OK;
 }
 
 #endif /* CONFIG_SCHED_WORKQUEUE */

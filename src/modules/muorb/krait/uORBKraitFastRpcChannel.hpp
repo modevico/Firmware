@@ -39,6 +39,8 @@
 #include <pthread.h>
 #include "uORB/uORBCommunicator.hpp"
 #include "px4muorb_KraitRpcWrapper.hpp"
+#include <map>
+#include "drivers/drv_hrt.h"
 
 namespace uORB
 {
@@ -119,21 +121,31 @@ public:
 private: // data members
 	static uORB::KraitFastRpcChannel _Instance;
 	uORBCommunicator::IChannelRxHandler *_RxHandler;
-        pthread_t   _RecvThread;
+	pthread_t   _RecvThread;
 	bool _ThreadStarted;
-        bool _ThreadShouldExit;
+	bool _ThreadShouldExit;
 
 	static const int32_t _CONTROL_MSG_TYPE_ADD_SUBSCRIBER = 1;
 	static const int32_t _CONTROL_MSG_TYPE_REMOVE_SUBSCRIBER = 2;
 	static const int32_t _DATA_MSG_TYPE = 3;
 
+	struct BulkTransferHeader {
+		uint16_t _MsgNameLen;
+		uint16_t _DataLen;
+	};
+
 	px4muorb::KraitRpcWrapper _KraitWrapper;
+
+	std::map<std::string, int32_t> _AdspSubscriberCache;
+	std::map<std::string, hrt_abstime> _AdspSubscriberSampleTimestamp;
+	//hrt_abstime  _SubCacheSampleTimestamp;
+	static const hrt_abstime _SubCacheRefreshRate = 1000000; // 1 second;
 
 private://class members.
 	/// constructor.
 	KraitFastRpcChannel();
 
-	static void*  thread_start(void *handler);
+	static void  *thread_start(void *handler);
 
 	void fastrpc_recv_thread();
 

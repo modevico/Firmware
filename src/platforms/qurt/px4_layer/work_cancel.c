@@ -87,34 +87,33 @@
 
 int work_cancel(int qid, struct work_s *work)
 {
-  struct wqueue_s *wqueue = &g_work[qid];
-  //irqstate_t flags;
+	struct wqueue_s *wqueue = &g_work[qid];
+	//irqstate_t flags;
 
-  //DEBUGASSERT(work != NULL && (unsigned)qid < NWORKERS);
+	//DEBUGASSERT(work != NULL && (unsigned)qid < NWORKERS);
 
-  /* Cancelling the work is simply a matter of removing the work structure
-   * from the work queue.  This must be done with interrupts disabled because
-   * new work is typically added to the work queue from interrupt handlers.
-   */
+	/* Cancelling the work is simply a matter of removing the work structure
+	 * from the work queue.  This must be done with interrupts disabled because
+	 * new work is typically added to the work queue from interrupt handlers.
+	 */
 
-  //flags = irqsave();
-  if (work->worker != NULL)
-    {
-      /* A little test of the integrity of the work queue */
+	//flags = irqsave();
+	if (work->worker != NULL) {
+		/* A little test of the integrity of the work queue */
 
-      //DEBUGASSERT(work->dq.flink ||(FAR dq_entry_t *)work == wqueue->q.tail);
-      //DEBUGASSERT(work->dq.blink ||(FAR dq_entry_t *)work == wqueue->q.head);
+		//DEBUGASSERT(work->dq.flink ||(FAR dq_entry_t *)work == wqueue->q.tail);
+		//DEBUGASSERT(work->dq.blink ||(FAR dq_entry_t *)work == wqueue->q.head);
 
-      /* Remove the entry from the work queue and make sure that it is
-       * mark as availalbe (i.e., the worker field is nullified).
-       */
+		/* Remove the entry from the work queue and make sure that it is
+		 * mark as availalbe (i.e., the worker field is nullified).
+		 */
 
-      dq_rem((FAR dq_entry_t *)work, &wqueue->q);
-      work->worker = NULL;
-    }
+		dq_rem((FAR dq_entry_t *)work, &wqueue->q);
+		work->worker = NULL;
+	}
 
-  //irqrestore(flags);
-  return PX4_OK;
+	//irqrestore(flags);
+	return PX4_OK;
 }
 
 #endif /* CONFIG_SCHED_WORKQUEUE */

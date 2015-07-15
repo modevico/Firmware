@@ -43,6 +43,7 @@
 #include "device.h"
 #include "vfile.h"
 
+#include <hrt_work.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -53,26 +54,11 @@ using namespace device;
 
 extern "C" {
 
-struct timerData {
-	sem_t &sem;
-	struct timespec &ts;
- 
-	timerData(sem_t &s, struct timespec &t) : sem(s), ts(t) {}
-	~timerData() {}
-};
-
-static void *timer_handler(void *data)
+static void timer_cb(void *data)
 {
-	struct timerData *td = (struct timerData *)data;
-
-	if (td->ts.tv_sec) {
-		sleep(td->ts.tv_sec);
-	}
-	usleep(td->ts.tv_nsec/1000);
-	sem_post(&(td->sem));
-
-	PX4_DEBUG("timer_handler: Timer expired");
-	return 0;
+	sem_t *p_sem = (sem_t *)data;
+	sem_post(p_sem);
+	//PX4_DEBUG("timer_handler: Timer expired");
 }
 
 #define PX4_MAX_FD 200
@@ -87,7 +73,7 @@ inline bool valid_fd(int fd)
 
 int px4_open(const char *path, int flags, ...)
 {
-	PX4_DEBUG("px4_open");
+	//PX4_DEBUG("px4_open");
 	VDev *dev = VDev::getDev(path);
 	int ret = 0;
 	int i;
@@ -103,7 +89,7 @@ int px4_open(const char *path, int flags, ...)
 		va_end(p);
 
 		// Create the file
-		PX4_DEBUG("Creating virtual file %s", path);
+		//PX4_DEBUG("Creating virtual file %s", path);
 		dev = VFile::createFile(path, mode);
 	}
 	if (dev) {
@@ -128,7 +114,7 @@ int px4_open(const char *path, int flags, ...)
 		px4_errno = -ret;
 		return -1;
 	}
-	PX4_DEBUG("px4_open fd = %d", filemap[i]->fd);
+	//PX4_DEBUG("px4_open fd = %d", filemap[i]->fd);
 	return filemap[i]->fd;
 }
 
@@ -137,7 +123,7 @@ int px4_close(int fd)
 	int ret;
 	if (valid_fd(fd)) {
 		VDev *dev = (VDev *)(filemap[fd]->vdev);
-		PX4_DEBUG("px4_close fd = %d", fd);
+		//PX4_DEBUG("px4_close fd = %d", fd);
 		ret = dev->close(filemap[fd]);
 		filemap[fd] = NULL;
 	}
@@ -156,7 +142,7 @@ ssize_t px4_read(int fd, void *buffer, size_t buflen)
 	int ret;
 	if (valid_fd(fd)) {
 		VDev *dev = (VDev *)(filemap[fd]->vdev);
-		PX4_DEBUG("px4_read fd = %d", fd);
+		//PX4_DEBUG("px4_read fd = %d", fd);
 		ret = dev->read(filemap[fd], (char *)buffer, buflen);
 	}
 	else { 
@@ -174,7 +160,7 @@ ssize_t px4_write(int fd, const void *buffer, size_t buflen)
 	int ret;
         if (valid_fd(fd)) {
 		VDev *dev = (VDev *)(filemap[fd]->vdev);
-		PX4_DEBUG("px4_write fd = %d", fd);
+		//PX4_DEBUG("px4_write fd = %d", fd);
 		ret = dev->write(filemap[fd], (const char *)buffer, buflen);
 	}
 	else { 
@@ -189,7 +175,7 @@ ssize_t px4_write(int fd, const void *buffer, size_t buflen)
 
 int px4_ioctl(int fd, int cmd, unsigned long arg)
 {
-	PX4_DEBUG("px4_ioctl fd = %d", fd);
+	//PX4_DEBUG("px4_ioctl fd = %d", fd);
 	int ret = 0;
         if (valid_fd(fd)) {
 		VDev *dev = (VDev *)(filemap[fd]->vdev);
@@ -211,9 +197,8 @@ int px4_poll(px4_pollfd_struct_t *fds, nfds_t nfds, int timeout)
 	int count = 0;
 	int ret;
 	unsigned int i;
-	struct timespec ts;
 
-	PX4_DEBUG("Called px4_poll timeout = %d", timeout);
+	//PX4_DEBUG("Called px4_poll timeout = %d", timeout);
 	sem_init(&sem, 0, 0);
 
 	// For each fd 
@@ -227,7 +212,7 @@ int px4_poll(px4_pollfd_struct_t *fds, nfds_t nfds, int timeout)
 		if (valid_fd(fds[i].fd))
 		{
 			VDev *dev = (VDev *)(filemap[fds[i].fd]->vdev);;
-			PX4_DEBUG("px4_poll: VDev->poll(setup) %d for dev %s", fds[i].fd,dev->get_devname());
+			//PX4_DEBUG("px4_poll: VDev->poll(setup) %d for dev %s", fds[i].fd, dev->get_devname() );
 			ret = dev->poll(filemap[fds[i].fd], &fds[i], true);
 
 			if (ret < 0)
@@ -239,27 +224,15 @@ int px4_poll(px4_pollfd_struct_t *fds, nfds_t nfds, int timeout)
 	{
 		if (timeout >= 0)
 		{
-			pthread_t pt;
-			void *res;
+			// Use a work queue task
+			work_s _hpwork;
 
-			ts.tv_sec = timeout/1000;
-			ts.tv_nsec = (timeout % 1000)*1000000;
-
-			// Create a timer to unblock
-			struct timerData td(sem, ts);
-			int rv = pthread_create(&pt, NULL, timer_handler, (void *)&td);
-			if (rv != 0) {
-				count = -1;
-				goto cleanup;
-			}
+			hrt_work_queue(&_hpwork, (worker_t)&timer_cb, (void *)&sem, 1000*timeout);
 			sem_wait(&sem);
 
 			// Make sure timer thread is killed before sem goes
 			// out of scope
-#ifdef __PX4_POSIX
-			(void)pthread_cancel(pt);
-			(void)pthread_join(pt, &res);
-#endif
+			hrt_work_cancel(&_hpwork);
         	}
 		else
 		{
@@ -273,7 +246,7 @@ int px4_poll(px4_pollfd_struct_t *fds, nfds_t nfds, int timeout)
 			if (valid_fd(fds[i].fd))
 			{
 				VDev *dev = (VDev *)(filemap[fds[i].fd]->vdev);;
-				PX4_DEBUG("px4_poll: VDev->poll(teardown) %d", fds[i].fd);
+				//PX4_DEBUG("px4_poll: VDev->poll(teardown) %d", fds[i].fd);
 				ret = dev->poll(filemap[fds[i].fd], &fds[i], false);
 	
 				if (ret < 0)
@@ -285,7 +258,6 @@ int px4_poll(px4_pollfd_struct_t *fds, nfds_t nfds, int timeout)
 		}
 	}
 
-cleanup:
 	sem_destroy(&sem);
 
 	return count;

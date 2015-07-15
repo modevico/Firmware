@@ -645,7 +645,7 @@ Sensors::Sensors() :
 	(void)param_find("PWM_AUX_MIN");
 	(void)param_find("PWM_AUX_MAX");
 	(void)param_find("PWM_AUX_DISARMED");
-	
+
 	/* fetch initial parameter values */
 	parameters_update();
 }
@@ -1043,6 +1043,7 @@ Sensors::accel_poll(struct sensor_combined_s &raw)
 		raw.accelerometer_timestamp = accel_report.timestamp;
 		raw.accelerometer_errcount = accel_report.error_count;
 		raw.accelerometer_temp = accel_report.temperature;
+		//PX4_DEBUG("Got accel.  ts: %12lu, x: %f, y: %f, z: %f", (unsigned long) raw.accelerometer_timestamp, vect(0),vect(1),vect(2));
 	}
 
 	orb_check(_accel1_sub, &accel_updated);
@@ -1095,6 +1096,7 @@ Sensors::accel_poll(struct sensor_combined_s &raw)
 void
 Sensors::gyro_poll(struct sensor_combined_s &raw)
 {
+	//static uint64_t last_time=0;
 	bool gyro_updated;
 	orb_check(_gyro_sub, &gyro_updated);
 
@@ -1105,7 +1107,6 @@ Sensors::gyro_poll(struct sensor_combined_s &raw)
 		math::Vector<3> vect(gyro_report.x, gyro_report.y, gyro_report.z);
 		vect = _board_rotation * vect;
 
-		//PX4_WARN("Got gyro.  x: %f, y: %f, z: %f", vect(0),vect(1),vect(2)); 
 		raw.gyro_rad_s[0] = vect(0);
 		raw.gyro_rad_s[1] = vect(1);
 		raw.gyro_rad_s[2] = vect(2);
@@ -1114,9 +1115,21 @@ Sensors::gyro_poll(struct sensor_combined_s &raw)
 		raw.gyro_raw[1] = gyro_report.y_raw;
 		raw.gyro_raw[2] = gyro_report.z_raw;
 
+#ifdef __PX4_QURT
+// Temporary fix required due to lack of time sync between apps and dsp cores
+		raw.timestamp = hrt_absolute_time();
+#else
 		raw.timestamp = gyro_report.timestamp;
+#endif
 		raw.gyro_errcount = gyro_report.error_count;
 		raw.gyro_temp = gyro_report.temperature;
+		/*
+		  PX4_DEBUG("Got gyro.  ts: %12lu, dt: %12lu, x: %+8.3f, y: %+8.3f, z: %+8.3f", 
+			  (unsigned long) raw.timestamp, 
+			  (unsigned long) raw.timestamp - (unsigned long) last_time, 
+			  vect(0),vect(1),vect(2));
+		last_time=raw.timestamp;
+		*/
 	}
 
 	orb_check(_gyro1_sub, &gyro_updated);
@@ -1179,7 +1192,7 @@ Sensors::mag_poll(struct sensor_combined_s &raw)
 
 		math::Vector<3> vect(mag_report.x, mag_report.y, mag_report.z);
 		vect = _mag_rotation[0] * vect;
-		//PX4_WARN("Mag after : %lu, %f, %f, %f",mag_report.timestamp,vect(0),vect(1),vect(2));
+		//PX4_DEBUG("Mag after : %lu, %f, %f, %f",mag_report.timestamp,vect(0),vect(1),vect(2));
 
 		raw.magnetometer_ga[0] = vect(0);
 		raw.magnetometer_ga[1] = vect(1);
@@ -1301,8 +1314,8 @@ Sensors::diff_pres_poll(struct sensor_combined_s &raw)
 							calc_true_airspeed(_diff_pres.differential_pressure_filtered_pa + raw.baro_pres_mbar * 1e2f,
 									raw.baro_pres_mbar * 1e2f, air_temperature_celsius));
 		_airspeed.true_airspeed_unfiltered_m_s = math::max(0.0f,
-							calc_true_airspeed(_diff_pres.differential_pressure_raw_pa + raw.baro_pres_mbar * 1e2f,
-								raw.baro_pres_mbar * 1e2f, air_temperature_celsius));
+				calc_true_airspeed(_diff_pres.differential_pressure_raw_pa + raw.baro_pres_mbar * 1e2f,
+						   raw.baro_pres_mbar * 1e2f, air_temperature_celsius));
 
 		_airspeed.air_temperature_celsius = air_temperature_celsius;
 
@@ -1330,7 +1343,7 @@ Sensors::vehicle_control_mode_poll()
 		orb_copy(ORB_ID(vehicle_control_mode), _vcontrol_mode_sub, &vcontrol_mode);
 
 		/* switching from non-HIL to HIL mode */
-		//PX4_WARN("vcontrol_mode.flag_system_hil_enabled: %d, _hil_enabled: %d, _publishing: %d",
+		//PX4_DEBUG("vcontrol_mode.flag_system_hil_enabled: %d, _hil_enabled: %d, _publishing: %d",
 		//	 vcontrol_mode.flag_system_hil_enabled,_hil_enabled,_publishing);
 		if (vcontrol_mode.flag_system_hil_enabled && !_hil_enabled) {
 			_hil_enabled = true;
@@ -1383,7 +1396,7 @@ Sensors::parameter_update_poll(bool forced)
 
 			bool config_ok = false;
 
-			/* run through all stored calibrations */ 
+			/* run through all stored calibrations */
 			for (unsigned i = 0; i < 3; i++) {
 				/* initially status is ok per config */
 				failed = false;
@@ -1415,15 +1428,19 @@ Sensors::parameter_update_poll(bool forced)
 
 					if (failed) {
 						PX4_WARN(CAL_ERROR_APPLY_CAL_MSG, "gyro", i);
+
 					} else {
 						/* apply new scaling and offsets */
 						res = px4_ioctl(fd, GYROIOCSSCALE, (long unsigned int)&gscale);
+
 						if (res) {
 							PX4_WARN(CAL_ERROR_APPLY_CAL_MSG, "gyro", i);
+
 						} else {
 							config_ok = true;
 						}
 					}
+
 					break;
 				}
 			}
@@ -1449,7 +1466,7 @@ Sensors::parameter_update_poll(bool forced)
 
 			bool config_ok = false;
 
-			/* run through all stored calibrations */ 
+			/* run through all stored calibrations */
 			for (unsigned i = 0; i < 3; i++) {
 				/* initially status is ok per config */
 				failed = false;
@@ -1481,15 +1498,19 @@ Sensors::parameter_update_poll(bool forced)
 
 					if (failed) {
 						PX4_WARN(CAL_ERROR_APPLY_CAL_MSG, "accel", i);
+
 					} else {
 						/* apply new scaling and offsets */
 						res = px4_ioctl(fd, ACCELIOCSSCALE, (long unsigned int)&gscale);
+
 						if (res) {
 							PX4_WARN(CAL_ERROR_APPLY_CAL_MSG, "accel", i);
+
 						} else {
 							config_ok = true;
 						}
 					}
+
 					break;
 				}
 			}
@@ -1523,7 +1544,7 @@ Sensors::parameter_update_poll(bool forced)
 
 			bool config_ok = false;
 
-			/* run through all stored calibrations */ 
+			/* run through all stored calibrations */
 			for (unsigned i = 0; i < 3; i++) {
 				/* initially status is ok per config */
 				failed = false;
@@ -1561,6 +1582,7 @@ Sensors::parameter_update_poll(bool forced)
 						/* reset param to -1 to indicate internal mag */
 						int32_t minus_one = MAG_ROT_VAL_INTERNAL;
 						param_set_no_notification(param_find(str), &minus_one);
+
 					} else {
 
 						int32_t mag_rot;
@@ -1605,15 +1627,19 @@ Sensors::parameter_update_poll(bool forced)
 
 					if (failed) {
 						PX4_WARN(CAL_ERROR_APPLY_CAL_MSG, "mag", i);
+
 					} else {
 						/* apply new scaling and offsets */
 						res = px4_ioctl(fd, MAGIOCSSCALE, (long unsigned int)&gscale);
+
 						if (res) {
 							PX4_WARN(CAL_ERROR_APPLY_CAL_MSG, "mag", i);
+
 						} else {
 							config_ok = true;
 						}
 					}
+
 					break;
 				}
 			}
@@ -1679,13 +1705,13 @@ Sensors::rc_parameter_map_poll(bool forced)
 
 		for (int i = 0; i < RC_PARAM_MAP_NCHAN; i++) {
 			PX4_WARN("\ti %d param_id %s scale %.3f value0 %.3f, min %.3f, max %.3f",
-			      i,
-			      _rc_parameter_map.param_id[i],
-			      (double)_rc_parameter_map.scale[i],
-			      (double)_rc_parameter_map.value0[i],
-			      (double)_rc_parameter_map.value_min[i],
-			      (double)_rc_parameter_map.value_max[i]
-			     );
+				 i,
+				 _rc_parameter_map.param_id[i],
+				 (double)_rc_parameter_map.scale[i],
+				 (double)_rc_parameter_map.value0[i],
+				 (double)_rc_parameter_map.value_min[i],
+				 (double)_rc_parameter_map.value_max[i]
+				);
 		}
 	}
 }
@@ -1881,6 +1907,7 @@ Sensors::set_params_from_rc()
 		}
 
 		float rc_val = get_rc_value((rc_channels_s::RC_CHANNELS_FUNCTION_PARAM_1 + i), -1.0, 1.0);
+
 		/* Check if the value has changed,
 		 * maybe we need to introduce a more aggressive limit here */
 		if (rc_val > _param_rc_values[i] + FLT_EPSILON || rc_val < _param_rc_values[i] - FLT_EPSILON) {
@@ -1903,12 +1930,12 @@ Sensors::rc_poll()
 		/* read low-level values from FMU or IO RC inputs (PPM, Spektrum, S.Bus) */
 		struct rc_input_values rc_input;
 
-		//PX4_WARN("input_rc topic received");
+		//PX4_DEBUG("input_rc topic received");
 		orb_copy(ORB_ID(input_rc), _rc_sub, &rc_input);
 
 		/* detect RC signal loss */
 		bool signal_lost;
-		
+
 		/* check flags and require at least four channels to consider the signal valid */
 		if (rc_input.rc_lost || rc_input.rc_failsafe || rc_input.channel_count < 4) {
 			/* signal is lost or no enough channels */
@@ -2013,24 +2040,30 @@ Sensors::rc_poll()
 			manual.timestamp = rc_input.timestamp_last_signal;
 
 			/* limit controls */
-			manual.y = get_rc_value (rc_channels_s::RC_CHANNELS_FUNCTION_ROLL, -1.0, 1.0);
-			manual.x = get_rc_value (rc_channels_s::RC_CHANNELS_FUNCTION_PITCH, -1.0, 1.0);
-			manual.r = get_rc_value (rc_channels_s::RC_CHANNELS_FUNCTION_YAW, -1.0, 1.0);
-			manual.z = get_rc_value (rc_channels_s::RC_CHANNELS_FUNCTION_THROTTLE, 0.0, 1.0);
-			manual.flaps = get_rc_value (rc_channels_s::RC_CHANNELS_FUNCTION_FLAPS, -1.0, 1.0);
-			manual.aux1 = get_rc_value (rc_channels_s::RC_CHANNELS_FUNCTION_AUX_1, -1.0, 1.0);
-			manual.aux2 = get_rc_value (rc_channels_s::RC_CHANNELS_FUNCTION_AUX_2, -1.0, 1.0);
-			manual.aux3 = get_rc_value (rc_channels_s::RC_CHANNELS_FUNCTION_AUX_3, -1.0, 1.0);
-			manual.aux4 = get_rc_value (rc_channels_s::RC_CHANNELS_FUNCTION_AUX_4, -1.0, 1.0);
-			manual.aux5 = get_rc_value (rc_channels_s::RC_CHANNELS_FUNCTION_AUX_5, -1.0, 1.0);
+			manual.y = get_rc_value(rc_channels_s::RC_CHANNELS_FUNCTION_ROLL, -1.0, 1.0);
+			manual.x = get_rc_value(rc_channels_s::RC_CHANNELS_FUNCTION_PITCH, -1.0, 1.0);
+			manual.r = get_rc_value(rc_channels_s::RC_CHANNELS_FUNCTION_YAW, -1.0, 1.0);
+			manual.z = get_rc_value(rc_channels_s::RC_CHANNELS_FUNCTION_THROTTLE, 0.0, 1.0);
+			manual.flaps = get_rc_value(rc_channels_s::RC_CHANNELS_FUNCTION_FLAPS, -1.0, 1.0);
+			manual.aux1 = get_rc_value(rc_channels_s::RC_CHANNELS_FUNCTION_AUX_1, -1.0, 1.0);
+			manual.aux2 = get_rc_value(rc_channels_s::RC_CHANNELS_FUNCTION_AUX_2, -1.0, 1.0);
+			manual.aux3 = get_rc_value(rc_channels_s::RC_CHANNELS_FUNCTION_AUX_3, -1.0, 1.0);
+			manual.aux4 = get_rc_value(rc_channels_s::RC_CHANNELS_FUNCTION_AUX_4, -1.0, 1.0);
+			manual.aux5 = get_rc_value(rc_channels_s::RC_CHANNELS_FUNCTION_AUX_5, -1.0, 1.0);
 
 			/* mode switches */
-			manual.mode_switch = get_rc_sw3pos_position (rc_channels_s::RC_CHANNELS_FUNCTION_MODE, _parameters.rc_auto_th, _parameters.rc_auto_inv, _parameters.rc_assist_th, _parameters.rc_assist_inv);
-			manual.posctl_switch = get_rc_sw2pos_position (rc_channels_s::RC_CHANNELS_FUNCTION_POSCTL, _parameters.rc_posctl_th, _parameters.rc_posctl_inv);
-			manual.return_switch = get_rc_sw2pos_position (rc_channels_s::RC_CHANNELS_FUNCTION_RETURN, _parameters.rc_return_th, _parameters.rc_return_inv);
-			manual.loiter_switch = get_rc_sw2pos_position (rc_channels_s::RC_CHANNELS_FUNCTION_LOITER, _parameters.rc_loiter_th, _parameters.rc_loiter_inv);
-			manual.acro_switch = get_rc_sw2pos_position (rc_channels_s::RC_CHANNELS_FUNCTION_ACRO, _parameters.rc_acro_th, _parameters.rc_acro_inv);
-			manual.offboard_switch = get_rc_sw2pos_position (rc_channels_s::RC_CHANNELS_FUNCTION_OFFBOARD, _parameters.rc_offboard_th, _parameters.rc_offboard_inv);
+			manual.mode_switch = get_rc_sw3pos_position(rc_channels_s::RC_CHANNELS_FUNCTION_MODE, _parameters.rc_auto_th,
+					     _parameters.rc_auto_inv, _parameters.rc_assist_th, _parameters.rc_assist_inv);
+			manual.posctl_switch = get_rc_sw2pos_position(rc_channels_s::RC_CHANNELS_FUNCTION_POSCTL, _parameters.rc_posctl_th,
+					       _parameters.rc_posctl_inv);
+			manual.return_switch = get_rc_sw2pos_position(rc_channels_s::RC_CHANNELS_FUNCTION_RETURN, _parameters.rc_return_th,
+					       _parameters.rc_return_inv);
+			manual.loiter_switch = get_rc_sw2pos_position(rc_channels_s::RC_CHANNELS_FUNCTION_LOITER, _parameters.rc_loiter_th,
+					       _parameters.rc_loiter_inv);
+			manual.acro_switch = get_rc_sw2pos_position(rc_channels_s::RC_CHANNELS_FUNCTION_ACRO, _parameters.rc_acro_th,
+					     _parameters.rc_acro_inv);
+			manual.offboard_switch = get_rc_sw2pos_position(rc_channels_s::RC_CHANNELS_FUNCTION_OFFBOARD,
+						 _parameters.rc_offboard_th, _parameters.rc_offboard_inv);
 
 			/* publish manual_control_setpoint topic */
 			if (_manual_control_pub != nullptr) {
@@ -2083,33 +2116,47 @@ Sensors::task_main_trampoline(int argc, char *argv[])
 void
 Sensors::task_main()
 {
-        PX4_WARN("Starting sensors task main.");
+	PX4_WARN("Starting sensors task main.");
 	/* start individual sensors */
 	int ret = 0;
 #if 0
+
 	do { /* create a scope to handle exit with break */
 		ret = accel_init();
-		if (ret) break;
+
+		if (ret) { break; }
+
 		ret = gyro_init();
-		if (ret) break;
+
+		if (ret) { break; }
+
 		ret = mag_init();
-		if (ret) break;
+
+		if (ret) { break; }
+
 		ret = baro_init();
-		if (ret) break;
+
+		if (ret) { break; }
+
 		ret = adc_init();
-		if (ret) break;
+
+		if (ret) { break; }
+
 		break;
 	} while (0);
 
 	if (ret) {
-                PX4_WARN("Sensor initialization failed");
+		PX4_WARN("Sensor initialization failed");
 		_sensors_task = -1;
-		if (_fd_adc >=0) {
+
+		if (_fd_adc >= 0) {
 			px4_close(_fd_adc);
 			_fd_adc = -1;
 		}
+
 		return;
 	}
+
 #endif
 	/*
 	 * do subscriptions
@@ -2136,7 +2183,7 @@ Sensors::task_main()
 	orb_set_interval(_vcontrol_mode_sub, 200);
 
 	/* rate limit gyro to 250 Hz (the gyro signal is lowpassed accordingly earlier) */
-	orb_set_interval(_gyro_sub, 4);
+	//orb_set_interval(_gyro_sub, 4);
 
 	/*
 	 * do advertisements
@@ -2191,11 +2238,12 @@ Sensors::task_main()
 	fds[0].events = POLLIN;
 
 	_task_should_exit = false;
+
 	while (!_task_should_exit) {
 
 		/* wait for up to 50ms for data */
-		int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), CONFIG_HACK_POLL_TIMEOUT);
-		//int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), 50);
+		//int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), CONFIG_HACK_POLL_TIMEOUT);
+		int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), 50);
 
 		/* if pret == 0 it timed out - periodic check for _task_should_exit, etc. */
 
@@ -2219,10 +2267,11 @@ Sensors::task_main()
 
 		/* work out if main gyro timed out and fail over to alternate gyro */
 		if (hrt_elapsed_time(&raw.timestamp) > 20 * 1000) {
-		  
+
 			/* if the secondary failed as well, go to the tertiary */
 			if (hrt_elapsed_time(&raw.gyro1_timestamp) > 20 * 1000) {
 				fds[0].fd = _gyro2_sub;
+
 			} else {
 				fds[0].fd = _gyro1_sub;
 			}
@@ -2235,7 +2284,7 @@ Sensors::task_main()
 
 		/* Inform other processes that new data is available to copy */
 		if (_publishing) {
-			//PX4_WARN("Publishing sensors combined.");
+			//PX4_DEBUG("Publishing sensors combined. dt: %lu",(unsigned long)hrt_elapsed_time(&raw.timestamp));
 			orb_publish(ORB_ID(sensor_combined), _sensor_pub, &raw);
 		}
 
@@ -2263,11 +2312,11 @@ Sensors::start()
 
 	/* start the task */
 	_sensors_task = px4_task_spawn_cmd("sensors_task",
-				       SCHED_DEFAULT,
-				       SCHED_PRIORITY_MAX - 5,
-				       2000,
-				       (px4_main_t)&Sensors::task_main_trampoline,
-				       nullptr);
+					   SCHED_DEFAULT,
+					   SCHED_PRIORITY_MAX - 5,
+					   2000,
+					   (px4_main_t)&Sensors::task_main_trampoline,
+					   nullptr);
 
 	/* wait until the task is up and running or has failed */
 	while (_sensors_task > 0 && _task_should_exit) {
@@ -2283,8 +2332,9 @@ Sensors::start()
 
 int sensors_main(int argc, char *argv[])
 {
-	PX4_WARN("Entering sensors_main.");
+	PX4_INFO("Entering sensors_main.");
 	usleep(1000000);
+
 	if (argc < 2) {
 		PX4_WARN("usage: sensors {start|stop|status}");
 		return 0;
@@ -2310,6 +2360,7 @@ int sensors_main(int argc, char *argv[])
 			PX4_WARN("start failed");
 			return 1;
 		}
+
 		PX4_WARN("Sensors module starting.");
 		return 0;
 	}

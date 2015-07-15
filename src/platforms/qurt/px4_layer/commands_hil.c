@@ -40,29 +40,23 @@
 const char *get_commands()
 {
 
-	static const char *commands = 
+	static const char *commands =
 		"uorb start\n"
 		"param set CAL_GYRO0_ID 2293760\n"
 		"param set CAL_ACC0_ID 1310720\n"
 		"param set CAL_ACC1_ID 1376256\n"
 		"param set CAL_MAG0_ID 196608\n"
-		"rgbled start\n"
+//		"rgbled start\n"
 //		"tone_alarm start\n"
 		"commander start\n"
-		"sleep 1\n"
 		"sensors start\n"
-		"sleep 1\n"
 		//"ekf_att_pos_estimator start\n"
 		"attitude_estimator_q start\n"
-		"sleep 1\n"
 		"position_estimator_inav start\n"
-		"sleep 1\n"
 		"mc_pos_control start\n"
-		"sleep 1\n"
 		"mc_att_control start\n"
 		"sleep 1\n"
 		"hil mode_pwm\n"
-		"sleep 1\n"
 		"param set RC1_MAX 2015\n"
 		"param set RC1_MIN 996\n"
 		"param set RC1_TRIM 1502\n"
@@ -109,5 +103,5 @@ const char *get_commands()
 		;
 
 	return commands;
-  
+
 }

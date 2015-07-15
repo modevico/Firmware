@@ -404,8 +404,8 @@ HIL::task_main()
 		}
 
 		/* sleep waiting for data, but no more than a second */
-		int ret = px4_poll(&fds[0], 2, CONFIG_HACK_POLL_TIMEOUT);
-		//int ret = px4_poll(&fds[0], 2, 1000);
+		//int ret = px4_poll(&fds[0], 2, CONFIG_HACK_POLL_TIMEOUT);
+		int ret = px4_poll(&fds[0], 2, 1000);
 
 		/* this would be bad... */
 		if (ret < 0) {
@@ -446,6 +446,8 @@ HIL::task_main()
 
 				/* and publish for anyone that cares to see */
 				orb_publish(ORB_ID(actuator_outputs), _t_outputs, &outputs);
+				//PX4_DEBUG( "ts(%lu) %f, %f, %f, %f", 
+				//	(unsigned long) outputs.timestamp, outputs.output[0], outputs.output[1], outputs.output[2], outputs.output[3] );
 			}
 		}
 

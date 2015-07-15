@@ -564,8 +564,8 @@ void AttitudePositionEstimatorEKF::task_main()
 	while (!_task_should_exit) {
 
 		/* wait for up to 100ms for data */
-		int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), CONFIG_HACK_POLL_TIMEOUT);
-		//int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), 100);
+		//int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), CONFIG_HACK_POLL_TIMEOUT);
+		int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), 100);
 
 		/* timed out - periodic check for _task_should_exit, etc. */
 		if (pret == 0) {
@@ -577,7 +577,7 @@ void AttitudePositionEstimatorEKF::task_main()
 			warn("POLL ERR %d, %d", pret, errno);
 			continue;
 		}
-		//PX4_WARN("Got sensors combined sem.");
+		//PX4_DEBUG("Got sensors combined sem.");
 		perf_begin(_loop_perf);
 		perf_count(_loop_intvl);
 
@@ -646,7 +646,8 @@ void AttitudePositionEstimatorEKF::task_main()
 			 *    We run the filter only once all data has been fetched
 			 **/
 
-			//PX4_WARN("cases: %d, %d, %d, %d",_baro_init, _gyro_valid, _accel_valid, _mag_valid);
+			//PX4_DEBUG("tick_per_us, %lu",get_ticks_per_us());
+			//PX4_DEBUG("cases: %d, %d, %d, %d",_baro_init, _gyro_valid, _accel_valid, _mag_valid);
 			if (_baro_init && _gyro_valid && _accel_valid && _mag_valid) {
 
 				// maintain filtered baro and gps altitudes to calculate weather offset
@@ -710,7 +711,7 @@ void AttitudePositionEstimatorEKF::task_main()
 					/*
 					  static uint64_t tmp_last_ts=0;
 					uint64_t tmp_ts = hrt_absolute_time();
-					PX4_WARN("EKF dt: %lu",(unsigned long) (tmp_ts - tmp_last_ts));
+					PX4_DEBUG("EKF dt: %lu",(unsigned long) (tmp_ts - tmp_last_ts));
 					tmp_last_ts = tmp_ts;
 					*/
 
@@ -850,7 +851,7 @@ void AttitudePositionEstimatorEKF::publishAttitude()
 	_att.rate_offsets[1] = _ekf->states[11] / _ekf->dtIMUfilt;
 	_att.rate_offsets[2] = _ekf->states[12] / _ekf->dtIMUfilt;
 
-	//PX4_WARN("Publishing Attitude");
+	//PX4_DEBUG("Publishing Attitude");
 	/* lazily publish the attitude only once available */
 	if (_att_pub != nullptr) {
   		/* publish the attitude setpoint */
@@ -895,7 +896,7 @@ void AttitudePositionEstimatorEKF::publishLocalPosition()
 		// bad data, abort publication
 		return;
 	}
-	//PX4_WARN("Publishing Local Position");
+	//PX4_DEBUG("Publishing Local Position");
 
 	/* lazily publish the local position only once available */
 	if (_local_pos_pub != nullptr) {
@@ -962,7 +963,7 @@ void AttitudePositionEstimatorEKF::publishGlobalPosition()
 		return;
 	}
 
-	PX4_WARN("Publishing Global Position");
+	PX4_DEBUG("Publishing Global Position");
 	/* lazily publish the global position only once available */
 	if (_global_pos_pub != nullptr) {
 		/* publish the global position */
@@ -1257,7 +1258,7 @@ void AttitudePositionEstimatorEKF::pollData()
 
 	int last_gyro_main = _gyro_main;
 
-	//PX4_WARN("EKF SenCombMag1: %lu, %f, %f, %f",_sensor_combined.magnetometer_timestamp,_sensor_combined.magnetometer_ga[0], 
+	//PX4_DEBUG("EKF SenCombMag1: %lu, %f, %f, %f",_sensor_combined.magnetometer_timestamp,_sensor_combined.magnetometer_ga[0], 
 	//	 _sensor_combined.magnetometer_ga[1],_sensor_combined.magnetometer_ga[2]);
 	if (PX4_ISFINITE(_sensor_combined.gyro_rad_s[0]) &&
 	    PX4_ISFINITE(_sensor_combined.gyro_rad_s[1]) &&
@@ -1581,10 +1582,10 @@ void AttitudePositionEstimatorEKF::pollData()
 		}
 	}
 /*
-	PX4_WARN("EKF mag  : %f, %f, %f",_ekf->magData.x ,_ekf->magData.y ,_ekf->magData.z); 
-	PX4_WARN("EKF accel: %f, %f, %f",_ekf->accel.x,_ekf->accel.y,_ekf->accel.z);
-	PX4_WARN("EKF gyro : %f, %f, %f",_ekf->angRate.x,_ekf->angRate.y,_ekf->angRate.z);
-	PX4_WARN("EKF baroH: %f",_ekf->baroHgt);
+	PX4_DEBUG("EKF mag  : %f, %f, %f",_ekf->magData.x ,_ekf->magData.y ,_ekf->magData.z); 
+	PX4_DEBUG("EKF accel: %f, %f, %f",_ekf->accel.x,_ekf->accel.y,_ekf->accel.z);
+	PX4_DEBUG("EKF gyro : %f, %f, %f",_ekf->angRate.x,_ekf->angRate.y,_ekf->angRate.z);
+	PX4_DEBUG("EKF baroH: %f",_ekf->baroHgt);
 */
 }
 
