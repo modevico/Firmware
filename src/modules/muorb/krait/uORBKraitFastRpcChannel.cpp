@@ -244,15 +244,6 @@ void uORB::KraitFastRpcChannel::fastrpc_recv_thread()
 	rpc_min = orb_min = 0xFFFFFFFF;
 	rpc_avg = orb_avg = 0.0;
 
-	uint8_t *local_rpc_data_buffer = new uint8_t[ 64 * 1024 ];
-
-	if (local_rpc_data_buffer == nullptr) {
-		PX4_ERR("Error Memory allocation failure for local data buffer.");
-		PX4_ERR("exiting reader thread");
-		return;
-	}
-
-
 	int32_t num_topics = 0;
 
 	hrt_abstime check_time = 0;
@@ -264,7 +255,6 @@ void uORB::KraitFastRpcChannel::fastrpc_recv_thread()
 		//uorb_fastrpc_recieve( &type, &name_len, name, &data_length, data );
 		//rc = _KraitWrapper.ReceiveData(&type, &name, &data_length, &data);
 		rc = _KraitWrapper.ReceiveBulkData(&data, &data_length, &num_topics);
-		memcpy(local_rpc_data_buffer, data, data_length);
 
 		t2 = hrt_absolute_time();
 
@@ -306,11 +296,8 @@ void uORB::KraitFastRpcChannel::fastrpc_recv_thread()
 		count++;
 
 		if ((unsigned long)(t2 - t1) < rpc_min) { rpc_min = (unsigned long)(t2 - t1); }
-
 		if ((unsigned long)(t2 - t1) > rpc_max) { rpc_max = (unsigned long)(t2 - t1); }
-
 		if ((unsigned long)(t3 - t2) < orb_min) { orb_min = (unsigned long)(t3 - t2); }
-
 		if ((unsigned long)(t3 - t2) > orb_max) { orb_max = (unsigned long)(t3 - t2); }
 
 		rpc_avg = ((double)((rpc_avg * (count - 1)) + (unsigned long)(t2 - t1))) / (double)(count);

@@ -183,7 +183,6 @@ int16_t uORB::FastRpcChannel::send_message(const char *messageName, int32_t leng
 	}
 
 	if ((unsigned long)DataQSize() < _min_q) { _min_q = (unsigned long)DataQSize(); }
-
 	if ((unsigned long)DataQSize() > _max_q) { _max_q = (unsigned long)DataQSize(); }
 
 	_count++;
@@ -465,19 +464,15 @@ int16_t uORB::FastRpcChannel::get_bulk_data
 	hrt_abstime t3 = hrt_absolute_time();
 
 	if ((unsigned long)(t3 - t1) > _get_bulk_max) { _get_bulk_max = (unsigned long)(t3 - t1); }
-
 	if ((unsigned long)(t3 - t1) < _get_bulk_min) { _get_bulk_min = (unsigned long)(t3 - t1); }
-
 	if ((unsigned long)(*topic_count) > _bulk_topic_count_max) { _bulk_topic_count_max = (unsigned long)(*topic_count); }
-
 	if ((unsigned long)(*topic_count) < _bulk_topic_count_min) { _bulk_topic_count_min = (unsigned long)(*topic_count); }
-
 	if ((unsigned long)(t3 - check_time) > 10000000) {
-		PX4_DEBUG("GetData: t1: %lu t2: %lu t3: %lu", (unsigned long)t1, (unsigned long)t2, (unsigned long)t3);
-		PX4_DEBUG(".... dt1: %7lu dt2: %7lu Q: %d", (unsigned long)(t2 - t1), (unsigned long)(t3 - t2), DataQSize());
-		PX4_DEBUG("ADSP RPC Stats: _get_bulk_min: %lu _get_bulk_max: %lu _dropped_pkts: %lu", _get_bulk_min, _get_bulk_max,
-			  _dropped_pkts);
-		PX4_DEBUG(" .... topic_count_min: %lu topic_count_max: %lu", _bulk_topic_count_min, _bulk_topic_count_max);
+		//PX4_DEBUG("GetData: t1: %lu t2: %lu t3: %lu", (unsigned long)t1, (unsigned long)t2, (unsigned long)t3);
+		//PX4_DEBUG(".... dt1: %7lu dt2: %7lu Q: %d", (unsigned long)(t2 - t1), (unsigned long)(t3 - t2), DataQSize());
+		//PX4_DEBUG("ADSP RPC Stats: _get_bulk_min: %lu _get_bulk_max: %lu _dropped_pkts: %lu", _get_bulk_min, _get_bulk_max,
+		//	  _dropped_pkts);
+		//PX4_DEBUG(" .... topic_count_min: %lu topic_count_max: %lu", _bulk_topic_count_min, _bulk_topic_count_max);
 		_get_bulk_max = 0;
 		_get_bulk_min = 0xFFFFFF;
 		_bulk_topic_count_min = 0xFFFFFF;
@@ -494,7 +489,6 @@ int32_t uORB::FastRpcChannel::get_data_msg_size_at(int32_t index)
 {
 	// the assumption here is that this is called within the context of semaphore,
 	// hence lock/unlock is not needed.
-
 	int32_t rc = 0;
 	rc += _DataMsgQueue[ index ]._Length;
 	rc += _DataMsgQueue[ index ]._MsgName.size() + 1;
