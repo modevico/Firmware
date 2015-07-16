@@ -419,8 +419,8 @@ HIL::task_main()
 			orb_copy(_primary_pwm_device ? ORB_ID_VEHICLE_ATTITUDE_CONTROLS :
 				     ORB_ID(actuator_controls_1), _t_actuators, &_controls);
 
-			/* can we mix? */
-			if (_mixers != nullptr) {
+                        /* can we mix? */
+			if (_armed && _mixers != nullptr) {
 				/* do mixing */
 				outputs.noutputs = _mixers->mix(&outputs.output[0], num_outputs, NULL);
 				outputs.timestamp = hrt_absolute_time();
@@ -457,6 +457,8 @@ HIL::task_main()
 
 			/* get new value */
 			orb_copy(ORB_ID(actuator_armed), _t_armed, &aa);
+			_armed = aa.armed;
+			//PX4_DEBUG("Changing armed to %d",_armed);
 		}
 	}
 

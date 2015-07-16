@@ -447,6 +447,8 @@ void print_status()
 	px4_close(state_sub);
 
 
+	if(state.hil_state == vehicle_status_s::HIL_STATE_ON)
+		warnx("HIL state ON");
 	warnx("arming: %s", armed_str);
 }
 
@@ -863,6 +865,17 @@ int commander_thread_main(int argc, char *argv[])
 	bool arm_tune_played = false;
 	bool was_armed = false;
 
+	bool startup_in_hil = false;
+	if(argc>0) {
+		if ( strcmp(argv[0],"-hil")==0) {
+			startup_in_hil = true;
+		} else {
+			PX4_ERR("Argument %s not supported.",argv[0]);
+			PX4_ERR("COMMANDER NOT STARTED");
+			thread_should_exit = true;
+		}
+	}
+
 	/* set parameters */
 	param_t _param_sys_type = param_find("MAV_TYPE");
 	param_t _param_system_id = param_find("MAV_SYS_ID");
@@ -883,7 +896,7 @@ int commander_thread_main(int argc, char *argv[])
 	main_states_str[vehicle_status_s::MAIN_STATE_ALTCTL]			= "ALTCTL";
 	main_states_str[vehicle_status_s::MAIN_STATE_POSCTL]			= "POSCTL";
 	main_states_str[vehicle_status_s::MAIN_STATE_AUTO_MISSION]		= "AUTO_MISSION";
-	main_states_str[vehicle_status_s::MAIN_STATE_AUTO_LOITER]			= "AUTO_LOITER";
+	main_states_str[vehicle_status_s::MAIN_STATE_AUTO_LOITER]		= "AUTO_LOITER";
 	main_states_str[vehicle_status_s::MAIN_STATE_AUTO_RTL]			= "AUTO_RTL";
 	main_states_str[vehicle_status_s::MAIN_STATE_ACRO]			= "ACRO";
 	main_states_str[vehicle_status_s::MAIN_STATE_STAB]			= "STAB";
@@ -891,22 +904,22 @@ int commander_thread_main(int argc, char *argv[])
 
 	const char *arming_states_str[vehicle_status_s::ARMING_STATE_MAX];
 	arming_states_str[vehicle_status_s::ARMING_STATE_INIT]			= "INIT";
-	arming_states_str[vehicle_status_s::ARMING_STATE_STANDBY]			= "STANDBY";
+	arming_states_str[vehicle_status_s::ARMING_STATE_STANDBY]		= "STANDBY";
 	arming_states_str[vehicle_status_s::ARMING_STATE_ARMED]			= "ARMED";
 	arming_states_str[vehicle_status_s::ARMING_STATE_ARMED_ERROR]		= "ARMED_ERROR";
 	arming_states_str[vehicle_status_s::ARMING_STATE_STANDBY_ERROR]		= "STANDBY_ERROR";
-	arming_states_str[vehicle_status_s::ARMING_STATE_REBOOT]			= "REBOOT";
-	arming_states_str[vehicle_status_s::ARMING_STATE_IN_AIR_RESTORE]		= "IN_AIR_RESTORE";
+	arming_states_str[vehicle_status_s::ARMING_STATE_REBOOT]		= "REBOOT";
+	arming_states_str[vehicle_status_s::ARMING_STATE_IN_AIR_RESTORE]	= "IN_AIR_RESTORE";
 
 	const char *nav_states_str[vehicle_status_s::NAVIGATION_STATE_MAX];
-	nav_states_str[vehicle_status_s::NAVIGATION_STATE_MANUAL]			= "MANUAL";
-	nav_states_str[vehicle_status_s::NAVIGATION_STATE_STAB]				= "STAB";
-	nav_states_str[vehicle_status_s::NAVIGATION_STATE_ALTCTL]			= "ALTCTL";
-	nav_states_str[vehicle_status_s::NAVIGATION_STATE_POSCTL]			= "POSCTL";
+	nav_states_str[vehicle_status_s::NAVIGATION_STATE_MANUAL]		= "MANUAL";
+	nav_states_str[vehicle_status_s::NAVIGATION_STATE_STAB]			= "STAB";
+	nav_states_str[vehicle_status_s::NAVIGATION_STATE_ALTCTL]		= "ALTCTL";
+	nav_states_str[vehicle_status_s::NAVIGATION_STATE_POSCTL]		= "POSCTL";
 	nav_states_str[vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION]		= "AUTO_MISSION";
 	nav_states_str[vehicle_status_s::NAVIGATION_STATE_AUTO_LOITER]		= "AUTO_LOITER";
 	nav_states_str[vehicle_status_s::NAVIGATION_STATE_AUTO_RTL]		= "AUTO_RTL";
-	nav_states_str[vehicle_status_s::NAVIGATION_STATE_AUTO_RCRECOVER]		= "AUTO_RCRECOVER";
+	nav_states_str[vehicle_status_s::NAVIGATION_STATE_AUTO_RCRECOVER]	= "AUTO_RCRECOVER";
 	nav_states_str[vehicle_status_s::NAVIGATION_STATE_AUTO_RTGS]		= "AUTO_RTGS";
 	nav_states_str[vehicle_status_s::NAVIGATION_STATE_AUTO_LANDENGFAIL]	= "AUTO_LANDENGFAIL";
 	nav_states_str[vehicle_status_s::NAVIGATION_STATE_AUTO_LANDGPSFAIL]	= "AUTO_LANDGPSFAIL";
@@ -942,7 +955,12 @@ int commander_thread_main(int argc, char *argv[])
 	status.main_state =vehicle_status_s::MAIN_STATE_MANUAL;
 	status.nav_state = vehicle_status_s::NAVIGATION_STATE_MANUAL;
 	status.arming_state = vehicle_status_s::ARMING_STATE_INIT;
-	status.hil_state = vehicle_status_s::HIL_STATE_OFF;
+
+	if(startup_in_hil) {
+		status.hil_state = vehicle_status_s::HIL_STATE_ON;
+	} else {
+		status.hil_state = vehicle_status_s::HIL_STATE_OFF;
+	}
 	status.failsafe = false;
 
 	/* neither manual nor offboard control commands have been received */
@@ -1235,7 +1253,6 @@ int commander_thread_main(int argc, char *argv[])
 	pthread_attr_destroy(&commander_low_prio_attr);
 
 	while (!thread_should_exit) {
-
 		if (mavlink_fd < 0 && counter % (1000000 / MAVLINK_OPEN_INTERVAL) == 0) {
 			/* try to open the mavlink log device every once in a while */
 			mavlink_fd = px4_open(MAVLINK_LOG_DEVICE, 0);
@@ -1437,6 +1454,7 @@ int commander_thread_main(int argc, char *argv[])
 		orb_check(safety_sub, &updated);
 
 		if (updated) {
+			//PX4_DEBUG("Safety updated to %d.",!safety.safety_off);
 			bool previous_safety_off = safety.safety_off;
 			orb_copy(ORB_ID(safety), safety_sub, &safety);
 
@@ -1798,9 +1816,13 @@ int commander_thread_main(int argc, char *argv[])
 			_last_mission_instance = mission_result.instance_count;
 		}
 
+		//PX4_DEBUG("status.rc_input_mode: %d, status.rc_input_blocked: %d, sp_man.timestamp: %14lu, hrt: %14lu",
+		//	  status.rc_input_mode, status.rc_input_blocked, (unsigned long) sp_man.timestamp, (unsigned long) hrt_absolute_time());
 		/* RC input check */
-		if (!(status.rc_input_mode == vehicle_status_s::RC_IN_MODE_OFF) && !status.rc_input_blocked && sp_man.timestamp != 0 &&
-		    hrt_absolute_time() < sp_man.timestamp + (uint64_t)(rc_loss_timeout * 1e6f)) {
+		//if (!(status.rc_input_mode == vehicle_status_s::RC_IN_MODE_OFF) && !status.rc_input_blocked && sp_man.timestamp != 0 &&
+		//    hrt_absolute_time() < sp_man.timestamp + (uint64_t)(rc_loss_timeout * 1e6f)) {
+		// HACK: remove old data check due to timestamp issue in QURT
+		if (!(status.rc_input_mode == vehicle_status_s::RC_IN_MODE_OFF) && !status.rc_input_blocked && sp_man.timestamp != 0 ) {
 			/* handle the case where RC signal was regained */
 			if (!status.rc_signal_found_once) {
 				status.rc_signal_found_once = true;
@@ -1848,6 +1870,8 @@ int commander_thread_main(int argc, char *argv[])
 				stick_off_counter = 0;
 			}
 
+			//PX4_DEBUG("x:%+8.4f, y:%+8.4f, r:%+8.4f, z:%+8.4f, arm_st: %3d, st_lim: %+8.4f, st_cnt: %5d, st_cnt_lim: %f",
+			//	  sp_man.x,sp_man.y,sp_man.r,sp_man.z,status.arming_state,STICK_ON_OFF_LIMIT,stick_on_counter,STICK_ON_OFF_COUNTER_LIMIT);
 			/* check if left stick is in lower right position and we're in MANUAL mode -> arm */
 			if (status.arming_state == vehicle_status_s::ARMING_STATE_STANDBY &&
 			    sp_man.r > STICK_ON_OFF_LIMIT && sp_man.z < 0.1f) {
@@ -2129,6 +2153,7 @@ int commander_thread_main(int argc, char *argv[])
 			status.timestamp = now;
 			orb_publish(ORB_ID(vehicle_status), status_pub, &status);
 
+			//PX4_DEBUG("Pub arm state: %d",armed.armed);
 			armed.timestamp = now;
 			orb_publish(ORB_ID(actuator_armed), armed_pub, &armed);
 		}
@@ -2476,7 +2501,9 @@ set_control_mode()
 	/* set vehicle_control_mode according to set_navigation_state */
 	control_mode.flag_armed = armed.armed;
 	control_mode.flag_external_manual_override_ok = (!status.is_rotary_wing && !status.is_vtol);
-	control_mode.flag_system_hil_enabled = status.hil_state == vehicle_status_s::HIL_STATE_ON;
+
+	// I don't think we want this anymore
+	//control_mode.flag_system_hil_enabled = status.hil_state == vehicle_status_s::HIL_STATE_ON;
 	control_mode.flag_control_offboard_enabled = false;
 
 	switch (status.nav_state) {

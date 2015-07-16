@@ -309,7 +309,7 @@ void AttitudeEstimatorQ::task_main()
 		last_time = now;
 
 		if (dt > _dt_max) {
-			PX4_WARN("Contraining dt. Was %8.4f", dt);
+			if(_inited) PX4_WARN("Contraining dt. Was %8.4f", dt);
 			dt = _dt_max;
 		}
 
