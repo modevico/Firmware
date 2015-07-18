@@ -404,7 +404,6 @@ HIL::task_main()
 		}
 
 		/* sleep waiting for data, but no more than a second */
-		//int ret = px4_poll(&fds[0], 2, CONFIG_HACK_POLL_TIMEOUT);
 		int ret = px4_poll(&fds[0], 2, 1000);
 
 		/* this would be bad... */

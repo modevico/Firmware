@@ -564,7 +564,6 @@ void AttitudePositionEstimatorEKF::task_main()
 	while (!_task_should_exit) {
 
 		/* wait for up to 100ms for data */
-		//int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), CONFIG_HACK_POLL_TIMEOUT);
 		int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), 100);
 
 		/* timed out - periodic check for _task_should_exit, etc. */
@@ -577,7 +576,7 @@ void AttitudePositionEstimatorEKF::task_main()
 			warn("POLL ERR %d, %d", pret, errno);
 			continue;
 		}
-		//PX4_DEBUG("Got sensors combined sem.");
+		PX4_DEBUG("Got sensors combined sem.");
 		perf_begin(_loop_perf);
 		perf_count(_loop_intvl);
 
@@ -646,8 +645,7 @@ void AttitudePositionEstimatorEKF::task_main()
 			 *    We run the filter only once all data has been fetched
 			 **/
 
-			//PX4_DEBUG("tick_per_us, %lu",get_ticks_per_us());
-			//PX4_DEBUG("cases: %d, %d, %d, %d",_baro_init, _gyro_valid, _accel_valid, _mag_valid);
+			PX4_DEBUG("cases: %d, %d, %d, %d",_baro_init, _gyro_valid, _accel_valid, _mag_valid);
 			if (_baro_init && _gyro_valid && _accel_valid && _mag_valid) {
 
 				// maintain filtered baro and gps altitudes to calculate weather offset

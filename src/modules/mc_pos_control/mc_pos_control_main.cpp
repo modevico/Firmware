@@ -955,7 +955,6 @@ MulticopterPositionControl::task_main()
 	while (!_task_should_exit) {
 		/* wait for up to 500ms for data */
 		int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), 500);
-		//int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), CONFIG_HACK_POLL_TIMEOUT);
 
 		/* timed out - periodic check for _task_should_exit */
 		if (pret == 0) {
@@ -964,7 +963,7 @@ MulticopterPositionControl::task_main()
 
 		/* this is undesirable but not much we can do */
 		if (pret < 0) {
-			warn("poll error %d, %d", pret, errno);
+			PX4_ERR("poll error %d, %d", pret, errno);
 			continue;
 		}
 
@@ -988,6 +987,7 @@ MulticopterPositionControl::task_main()
 		was_armed = _control_mode.flag_armed;
 
 		update_ref();
+
 /*
 		PX4_WARN("pret = %d, dt = %f",pret, dt);
 		PX4_DEBUG("vehicle_control_mode.flag_armed,                       %d",_control_mode.flag_armed);
@@ -1004,6 +1004,7 @@ MulticopterPositionControl::task_main()
 //		PX4_DEBUG("vehicle_control_mode.flag_control_altitude_enabled,    %d",_control_mode.flag_control_altitude_enabled);
 //		PX4_DEBUG("vehicle_control_mode.flag_control_climb_rate_enabled,  %d",_control_mode.flag_control_climb_rate_enabled);
 //		PX4_DEBUG("vehicle_control_mode.flag_control_termination_enabled, %d",_control_mode.flag_control_termination_enabled);
+
 */
 		if (_control_mode.flag_control_altitude_enabled ||
 		    _control_mode.flag_control_position_enabled ||

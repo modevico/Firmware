@@ -2242,7 +2242,6 @@ Sensors::task_main()
 	while (!_task_should_exit) {
 
 		/* wait for up to 50ms for data */
-		//int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), CONFIG_HACK_POLL_TIMEOUT);
 		int pret = px4_poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), 50);
 
 		/* if pret == 0 it timed out - periodic check for _task_should_exit, etc. */

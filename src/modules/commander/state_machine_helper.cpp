@@ -252,6 +252,8 @@ arming_state_transition(struct vehicle_status_s *status,		///< current vehicle s
 			}
 			feedback_provided = true;
 			valid_transition = false;
+			//PX4_DEBUG("Setting STANDBY_ERROR.  %d, %d, %d, %d, %d",
+			//	  status->hil_state, new_arming_state, status->arming_state, status->condition_system_sensors_initialized, fRunPreArmChecks );
 			status->arming_state = vehicle_status_s::ARMING_STATE_STANDBY_ERROR;
 		}
 

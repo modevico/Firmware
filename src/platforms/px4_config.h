@@ -39,9 +39,6 @@
 
 #pragma once
 
-// This is a temporary hack to work around the px4_poll issues
-#define CONFIG_HACK_POLL_TIMEOUT 10
-
 #if defined(__PX4_NUTTX)
 
 #include <nuttx/config.h>

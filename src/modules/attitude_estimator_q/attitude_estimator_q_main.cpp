@@ -243,8 +243,6 @@ void AttitudeEstimatorQ::task_main()
 
 	while (!_task_should_exit) {
 		int ret = px4_poll(fds, 1, 1000);
-		//int ret = px4_poll(fds, 1, CONFIG_HACK_POLL_TIMEOUT);
-
 		if (ret < 0) {
 			// Poll error, sleep and try again
 			usleep(10000);
@@ -344,6 +342,7 @@ void AttitudeEstimatorQ::task_main()
 		/* copy rotation matrix */
 		memcpy(&att.R[0], R.data, sizeof(att.R));
 		att.R_valid = true;
+
 /*
 		static int count=0;
 		count++;
@@ -359,6 +358,7 @@ void AttitudeEstimatorQ::task_main()
 			PX4_DEBUG("Mag.      x: %+8.4f,     y: %+8.4f,   z: %+8.4f             ", _mag(0),_mag(1),_mag(2));
 			PX4_DEBUG("Par  _w_mag: %+8.4f,_w_acc: %+8.4f                            ", _w_mag,_w_accel);
 		}
+
 */
 		if (_att_pub == nullptr) {
 			_att_pub = orb_advertise(ORB_ID(vehicle_attitude), &att);

@@ -117,29 +117,29 @@ MultirotorMixer::from_text(Mixer::ControlCallback control_cb, uintptr_t cb_handl
 			/* found a line ending or space, so no split symbols / numbers. good. */
 			break;
 		} else {
-			debug("simple parser rejected: No newline / space at end of buf. (#%d/%d: 0x%02x)", i, buflen-1, buf[i]);
+			PX4_DEBUG("simple parser rejected: No newline / space at end of buf. (#%d/%d: 0x%02x)", i, buflen-1, buf[i]);
 			return nullptr;
 		}
 
 	}
 
 	if (sscanf(buf, "R: %s %d %d %d %d%n", geomname, &s[0], &s[1], &s[2], &s[3], &used) != 5) {
-		debug("multirotor parse failed on '%s'", buf);
+		PX4_DEBUG("multirotor parse failed on '%s'", buf);
 		return nullptr;
 	}
 
 	if (used > (int)buflen) {
-		debug("OVERFLOW: multirotor spec used %d of %u", used, buflen);
+		PX4_DEBUG("OVERFLOW: multirotor spec used %d of %u", used, buflen);
 		return nullptr;
 	}
 
 	buf = skipline(buf, buflen);
 	if (buf == nullptr) {
-		debug("no line ending, line is incomplete");
+		PX4_DEBUG("no line ending, line is incomplete");
 		return nullptr;
 	}
 
-	debug("remaining in buf: %d, first char: %c", buflen, buf[0]);
+	PX4_DEBUG("remaining in buf: %d, first char: %c", buflen, buf[0]);
 
 	if (!strcmp(geomname, "4+")) {
 		geometry = MultirotorGeometry::QUAD_PLUS;
@@ -181,11 +181,11 @@ MultirotorMixer::from_text(Mixer::ControlCallback control_cb, uintptr_t cb_handl
 		geometry = MultirotorGeometry::TRI_Y;
 
 	} else {
-		debug("unrecognised geometry '%s'", geomname);
+		PX4_DEBUG("unrecognised geometry '%s'", geomname);
 		return nullptr;
 	}
 
-	debug("adding multirotor mixer '%s'", geomname);
+	PX4_DEBUG("adding multirotor mixer '%s'", geomname);
 
 	return new MultirotorMixer(
 		       control_cb,
