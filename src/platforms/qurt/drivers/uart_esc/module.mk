@@ -32,12 +32,12 @@
 ############################################################################
 
 #
-# Makefile to build the MPU9x50 driver.
+# Makefile to build the UART_ESC driver.
 #
 
-MODULE_COMMAND	= mpu9x50
+MODULE_COMMAND	= uart_esc
 
-SRCS		= mpu9x50_main.cpp
+SRCS		= uart_esc_main.cpp
 
 MODULE_STACKSIZE	= 1200
 

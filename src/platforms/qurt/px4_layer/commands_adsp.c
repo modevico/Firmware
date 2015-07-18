@@ -42,7 +42,7 @@ const char *get_commands()
 
 	static const char *commands =
 		"uorb start\n"
-		"mpu9x50 start\n"
+		"uart_esc start\n"
 
 		;
 

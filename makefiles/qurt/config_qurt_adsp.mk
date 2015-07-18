@@ -7,7 +7,7 @@
 #
 MODULES		+= drivers/device
 MODULES		+= modules/sensors
-MODULES		+= drivers/mpu9x50
+MODULES		+= platforms/qurt/drivers/uart_esc
 
 #
 # System commands
@@ -18,15 +18,19 @@ MODULES	+= systemcmds/param
 #
 # General system control
 #
-#MODULES		+= modules/mavlink
 
 #
 # Estimation modules (EKF/ SO3 / other filters)
 #
+MODULES		+= modules/ekf_att_pos_estimator
+MODULES		+= modules/attitude_estimator_q
+MODULES		+= modules/position_estimator_inav
 
 #
 # Vehicle Control
 #
+MODULES		+= modules/mc_att_control
+MODULES		+= modules/mc_pos_control
 
 #
 # Library modules
@@ -35,6 +39,7 @@ MODULES		+= modules/systemlib
 MODULES		+= modules/systemlib/mixer
 MODULES		+= modules/uORB
 #MODULES		+= modules/dataman
+MODULES		+= modules/commander
 
 #
 # Libraries

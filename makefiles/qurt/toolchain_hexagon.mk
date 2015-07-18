@@ -127,6 +127,7 @@ ARCHDEFINES		+= -DCONFIG_ARCH_BOARD_$(CONFIG_BOARD) \
 			    -I$(DSPAL_ROOT)/dspal/include \
 			    -I$(DSPAL_ROOT)/dspal/sys \
 			    -I$(DSPAL_ROOT)/dspal/sys/sys \
+			    -I$(DSPAL_ROOT)/uart_esc/inc/ \
 			    -I$(HEXAGON_TOOLS_ROOT)/gnu/hexagon/include \
 			    -I$(PX4_BASE)/src/lib/eigen \
 			    -I$(PX4_BASE)/src/platforms/qurt/include \
@@ -242,6 +243,9 @@ LDFLAGS			+=  -g -mv5 -mG0lib -G0 -fpic -shared \
                            -lc \
 			   $(EXTRALDFLAGS) \
 			   $(addprefix -L,$(LIB_DIRS))
+
+# driver dynamic libraries
+LDFLAGS	+= -L${DSPAL_ROOT}/uart_esc/hexagon_Debug_dynamic_toolv64/ship -luart_esc
 
 # Compiler support library
 #
