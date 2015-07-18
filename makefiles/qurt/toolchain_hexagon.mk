@@ -45,7 +45,7 @@ endif
 
 # Toolchain commands. Normally only used inside this file.
 #
-HEXAGON_TOOLS_ROOT	 = /opt/6.4.03
+HEXAGON_TOOLS_ROOT	 ?= /opt/6.4.03
 #HEXAGON_TOOLS_ROOT	 = /opt/6.4.05
 HEXAGON_SDK_ROOT	 = /opt/Hexagon_SDK/2.0
 V_ARCH			 = v5
