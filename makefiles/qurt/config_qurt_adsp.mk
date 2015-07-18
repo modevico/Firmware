@@ -7,6 +7,7 @@
 #
 MODULES		+= drivers/device
 MODULES		+= modules/sensors
+MODULES		+= platforms/qurt/drivers/mpu9x50
 MODULES		+= platforms/qurt/drivers/uart_esc
 
 #
