@@ -88,11 +88,11 @@ sem_t _work_lock[NWORKERS];
  *
  ****************************************************************************/
 
-static void work_process(FAR struct wqueue_s *wqueue, int lock_id)
+static void work_process(struct wqueue_s *wqueue, int lock_id)
 {
-	volatile FAR struct work_s *work;
+	volatile struct work_s *work;
 	worker_t  worker;
-	FAR void *arg;
+	void *arg;
 	uint64_t elapsed;
 	uint32_t remaining;
 	uint32_t next;
@@ -105,7 +105,7 @@ static void work_process(FAR struct wqueue_s *wqueue, int lock_id)
 
 	work_lock(lock_id);
 
-	work  = (FAR struct work_s *)wqueue->q.head;
+	work  = (struct work_s *)wqueue->q.head;
 
 	while (work) {
 		/* Is this work ready?  It is ready if there is no delay or if
@@ -152,7 +152,7 @@ static void work_process(FAR struct wqueue_s *wqueue, int lock_id)
 			 */
 
 			work_lock(lock_id);
-			work  = (FAR struct work_s *)wqueue->q.head;
+			work  = (struct work_s *)wqueue->q.head;
 
 		} else {
 			/* This one is not ready.. will it be ready before the next
@@ -170,7 +170,7 @@ static void work_process(FAR struct wqueue_s *wqueue, int lock_id)
 
 			/* Then try the next in the list. */
 
-			work = (FAR struct work_s *)work->dq.flink;
+			work = (struct work_s *)work->dq.flink;
 		}
 	}
 
