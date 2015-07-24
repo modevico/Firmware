@@ -97,14 +97,14 @@ void hrt_work_cancel(struct work_s *work)
 	if (work->worker != NULL) {
 		/* A little test of the integrity of the work queue */
 
-		//DEBUGASSERT(work->dq.flink ||(FAR dq_entry_t *)work == wqueue->q.tail);
-		//DEBUGASSERT(work->dq.blink ||(FAR dq_entry_t *)work == wqueue->q.head);
+		//DEBUGASSERT(work->dq.flink ||(dq_entry_t *)work == wqueue->q.tail);
+		//DEBUGASSERT(work->dq.blink ||(dq_entry_t *)work == wqueue->q.head);
 
 		/* Remove the entry from the work queue and make sure that it is
 		 * mark as availalbe (i.e., the worker field is nullified).
 		 */
 
-		dq_rem((FAR dq_entry_t *)work, &wqueue->q);
+		dq_rem((dq_entry_t *)work, &wqueue->q);
 		work->worker = NULL;
 	}
 

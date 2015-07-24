@@ -90,9 +90,9 @@ static void hrt_work_process(void);
 static void hrt_work_process()
 {
 	struct wqueue_s *wqueue = &g_hrt_work;
-	volatile FAR struct work_s *work;
+	volatile struct work_s *work;
 	worker_t  worker;
-	FAR void *arg;
+	void *arg;
 	uint64_t elapsed;
 	uint32_t remaining;
 	uint32_t next;
@@ -106,7 +106,7 @@ static void hrt_work_process()
 
 	hrt_work_lock();
 
-	work  = (FAR struct work_s *)wqueue->q.head;
+	work  = (struct work_s *)wqueue->q.head;
 
 	while (work) {
 		/* Is this work ready?  It is ready if there is no delay or if
@@ -154,7 +154,7 @@ static void hrt_work_process()
 			 */
 
 			hrt_work_lock();
-			work  = (FAR struct work_s *)wqueue->q.head;
+			work  = (struct work_s *)wqueue->q.head;
 
 		} else {
 			/* This one is not ready.. will it be ready before the next
@@ -173,7 +173,7 @@ static void hrt_work_process()
 
 			/* Then try the next in the list. */
 
-			work = (FAR struct work_s *)work->dq.flink;
+			work = (struct work_s *)work->dq.flink;
 			//PX4_INFO("next %u work %p", next, work);
 		}
 	}
