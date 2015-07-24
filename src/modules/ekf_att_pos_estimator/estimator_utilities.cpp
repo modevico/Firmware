@@ -51,8 +51,10 @@
 static void
 ekf_debug_print(const char *fmt, va_list args)
 {
-    PX4_WARN("%s: ", "[ekf]");
-    PX4_WARN( fmt, args);
+    fprintf(stderr, "%s: ", "[ekf]");
+    vfprintf(stderr, fmt, args);
+
+    fprintf(stderr, "\n");
 }
 
 void
