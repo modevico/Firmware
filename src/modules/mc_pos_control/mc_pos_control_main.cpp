@@ -963,7 +963,7 @@ MulticopterPositionControl::task_main()
 
 		/* this is undesirable but not much we can do */
 		if (pret < 0) {
-			warn("poll error %d, %d", pret, errno);
+			PX4_ERR("poll error %d, %d", pret, errno);
 			continue;
 		}
 
@@ -988,6 +988,24 @@ MulticopterPositionControl::task_main()
 
 		update_ref();
 
+/*
+		PX4_WARN("pret = %d, dt = %f",pret, dt);
+		PX4_DEBUG("vehicle_control_mode.flag_armed,                       %d",_control_mode.flag_armed);
+//		PX4_DEBUG("vehicle_control_mode.flag_external_manual_override_ok, %d",_control_mode.flag_external_manual_override_ok);
+		PX4_DEBUG("vehicle_control_mode.flag_system_hil_enabled,          %d",_control_mode.flag_system_hil_enabled);
+		PX4_DEBUG("vehicle_control_mode.flag_control_manual_enabled,      %d",_control_mode.flag_control_manual_enabled);
+//		PX4_DEBUG("vehicle_control_mode.flag_control_auto_enabled,        %d",_control_mode.flag_control_auto_enabled);
+//		PX4_DEBUG("vehicle_control_mode.flag_control_offboard_enabled,    %d",_control_mode.flag_control_offboard_enabled);
+		PX4_DEBUG("vehicle_control_mode.flag_control_rates_enabled,       %d",_control_mode.flag_control_rates_enabled);
+		PX4_DEBUG("vehicle_control_mode.flag_control_attitude_enabled,    %d",_control_mode.flag_control_attitude_enabled);
+//		PX4_DEBUG("vehicle_control_mode.flag_control_force_enabled,       %d",_control_mode.flag_control_force_enabled);
+//		PX4_DEBUG("vehicle_control_mode.flag_control_velocity_enabled,    %d",_control_mode.flag_control_velocity_enabled);
+//		PX4_DEBUG("vehicle_control_mode.flag_control_position_enabled,    %d",_control_mode.flag_control_position_enabled);
+//		PX4_DEBUG("vehicle_control_mode.flag_control_altitude_enabled,    %d",_control_mode.flag_control_altitude_enabled);
+//		PX4_DEBUG("vehicle_control_mode.flag_control_climb_rate_enabled,  %d",_control_mode.flag_control_climb_rate_enabled);
+//		PX4_DEBUG("vehicle_control_mode.flag_control_termination_enabled, %d",_control_mode.flag_control_termination_enabled);
+
+*/
 		if (_control_mode.flag_control_altitude_enabled ||
 		    _control_mode.flag_control_position_enabled ||
 		    _control_mode.flag_control_climb_rate_enabled ||
@@ -1386,7 +1404,8 @@ MulticopterPositionControl::task_main()
 		/* generate attitude setpoint from manual controls */
 		if(_control_mode.flag_control_manual_enabled && _control_mode.flag_control_attitude_enabled) {
 
-			/* reset yaw setpoint to current position if needed */
+			//PX4_DEBUG("Manual inputs.  x: %f, y: %f, r: %f, z: %f",_manual.x, _manual.y, _manual.r, _manual.z );
+			// reset yaw setpoint to current position if needed
 			if (reset_yaw_sp) {
 				reset_yaw_sp = false;
 				_att_sp.yaw_body = _att.yaw;

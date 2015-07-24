@@ -1122,7 +1122,7 @@ ACCELSIM::measure()
 		// yet initialized
 		if (_accel_topic != nullptr) {
 			orb_publish(ORB_ID(sensor_accel), _accel_topic, &accel_report);
-		}
+	}
 	}
 
 	_accel_read++;

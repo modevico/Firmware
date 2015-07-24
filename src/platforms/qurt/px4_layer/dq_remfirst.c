@@ -57,26 +57,24 @@
 
 FAR dq_entry_t *dq_remfirst(dq_queue_t *queue)
 {
-  FAR dq_entry_t *ret = queue->head;
+	FAR dq_entry_t *ret = queue->head;
 
-  if (ret)
-    {
-      FAR dq_entry_t *next = ret->flink;
-      if (!next)
-        {
-          queue->head = NULL;
-          queue->tail = NULL;
-        }
-      else
-        {
-          queue->head = next;
-          next->blink = NULL;
-        }
+	if (ret) {
+		FAR dq_entry_t *next = ret->flink;
 
-      ret->flink = NULL;
-      ret->blink = NULL;
-    }
+		if (!next) {
+			queue->head = NULL;
+			queue->tail = NULL;
 
-  return ret;
+		} else {
+			queue->head = next;
+			next->blink = NULL;
+		}
+
+		ret->flink = NULL;
+		ret->blink = NULL;
+	}
+
+	return ret;
 }
 

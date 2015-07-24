@@ -57,28 +57,24 @@
 
 void dq_rem(FAR dq_entry_t *node, dq_queue_t *queue)
 {
-  FAR dq_entry_t *prev = node->blink;
-  FAR dq_entry_t *next = node->flink;
+	FAR dq_entry_t *prev = node->blink;
+	FAR dq_entry_t *next = node->flink;
 
-  if (!prev)
-    {
-      queue->head = next;
-    }
-  else 
-    {
-      prev->flink = next;
-    }
+	if (!prev) {
+		queue->head = next;
 
-  if (!next)
-    {
-      queue->tail = prev;
-    }
-  else 
-    {
-      next->blink = prev;
-    }
+	} else {
+		prev->flink = next;
+	}
 
-  node->flink = NULL;
-  node->blink = NULL;
+	if (!next) {
+		queue->tail = prev;
+
+	} else {
+		next->blink = prev;
+	}
+
+	node->flink = NULL;
+	node->blink = NULL;
 }
 

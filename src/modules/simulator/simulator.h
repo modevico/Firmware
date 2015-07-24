@@ -211,7 +211,6 @@ private:
 	_gyro_pub(nullptr),
 	_mag_pub(nullptr),
 	_initialized(false),
-#ifndef __PX4_QURT
 	_rc_channels_pub(nullptr),
 	_actuator_outputs_sub(-1),
 	_vehicle_attitude_sub(-1),
@@ -220,7 +219,6 @@ private:
 	_actuators{},
 	_attitude{},
 	_manual{}
-#endif
 	{}
 	~Simulator() { _instance=NULL; }
 

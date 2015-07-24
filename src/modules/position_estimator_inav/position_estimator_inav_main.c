@@ -46,8 +46,8 @@
 #include <fcntl.h>
 #include <string.h>
 #include <px4_config.h>
-#include <sys/prctl.h>
-#include <termios.h>
+//#include <sys/prctl.h>
+//#include <termios.h>
 #include <math.h>
 #include <float.h>
 #include <uORB/uORB.h>
@@ -118,10 +118,10 @@ static inline int max(int val1, int val2)
 static void usage(const char *reason)
 {
 	if (reason) {
-		fprintf(stderr, "%s\n", reason);
+		PX4_INFO("%s\n", reason);
 	}
 
-	fprintf(stderr, "usage: position_estimator_inav {start|stop|status} [-v]\n\n");
+	PX4_INFO("usage: position_estimator_inav {start|stop|status} [-v]\n\n");
 	return;
 }
 
@@ -141,7 +141,7 @@ int position_estimator_inav_main(int argc, char *argv[])
 
 	if (!strcmp(argv[1], "start")) {
 		if (thread_running) {
-			warnx("already running");
+			PX4_WARN("already running");
 			/* this is not an error */
 			return 0;
 		}
@@ -152,9 +152,11 @@ int position_estimator_inav_main(int argc, char *argv[])
 			inav_verbose_mode = true;
 		}
 
+		PX4_WARN("Spawning thread.  argc = %d",argc);
 		thread_should_exit = false;
 		position_estimator_inav_task = px4_task_spawn_cmd("position_estimator_inav",
-					       SCHED_DEFAULT, SCHED_PRIORITY_MAX - 5, 5000,
+					       SCHED_DEFAULT, SCHED_PRIORITY_MAX - 5, 
+					       7500,
 					       position_estimator_inav_thread_main,
 					       (argv && argc > 2) ? (char * const *) &argv[2] : (char * const *) NULL);
 		return 0;
@@ -162,11 +164,11 @@ int position_estimator_inav_main(int argc, char *argv[])
 
 	if (!strcmp(argv[1], "stop")) {
 		if (thread_running) {
-			warnx("stop");
+			PX4_WARN("stop");
 			thread_should_exit = true;
 
 		} else {
-			warnx("not started");
+			PX4_WARN("not started");
 		}
 
 		return 0;
@@ -174,7 +176,7 @@ int position_estimator_inav_main(int argc, char *argv[])
 
 	if (!strcmp(argv[1], "status")) {
 		if (thread_running) {
-			warnx("is running");
+			PX4_WARN("is running");
 
 		} else {
 			warnx("not started");
@@ -192,6 +194,7 @@ static void write_debug_log(const char *msg, float dt, float x_est[2], float y_e
 	float corr_vision[3][2], float w_xy_vision_p, float w_z_vision_p, float w_xy_vision_v)
 {
 	return;
+#if 0
 	FILE *f = fopen(PX4_ROOTFSDIR"/fs/microsd/inav.log", "a");
 
 	if (f) {
@@ -215,6 +218,7 @@ static void write_debug_log(const char *msg, float dt, float x_est[2], float y_e
 
 	fsync(fileno(f));
 	fclose(f);
+#endif
 }
 
 /****************************************************************************
@@ -222,6 +226,7 @@ static void write_debug_log(const char *msg, float dt, float x_est[2], float y_e
  ****************************************************************************/
 int position_estimator_inav_thread_main(int argc, char *argv[])
 {
+	PX4_WARN("Entering POS Thread main");
 	int mavlink_fd;
 	mavlink_fd = px4_open(MAVLINK_LOG_DEVICE, 0);
 
@@ -383,7 +388,13 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 	};
 
 	/* wait for initial baro value */
+#ifdef __PX4_QURT
+	// WARNING skipping
+	PX4_WARN("Hacked to skip baro initialization for testing.");
+	bool wait_baro = false;
+#else
 	bool wait_baro = true;
+#endif
 
 	thread_running = true;
 
@@ -403,7 +414,7 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 
 					/* mean calculation over several measurements */
 					if (baro_init_cnt < baro_init_num) {
-						if (isfinite(sensor.baro_alt_meter)) {
+						if (PX4_ISFINITE(sensor.baro_alt_meter)) {
 							baro_offset += sensor.baro_alt_meter;
 							baro_init_cnt++;
 						}
@@ -411,7 +422,7 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 					} else {
 						wait_baro = false;
 						baro_offset /= (float) baro_init_cnt;
-						warnx("baro offset: %d m", (int)baro_offset);
+						PX4_WARN("baro offset: %d m", (int)baro_offset);
 						mavlink_log_info(mavlink_fd, "[inav] baro offset: %d m", (int)baro_offset);
 						local_pos.z_valid = true;
 						local_pos.v_z_valid = true;
@@ -429,7 +440,6 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 	while (!thread_should_exit) {
 		int ret = px4_poll(fds, 1, 20); // wait maximal 20 ms = 50 Hz minimum rate
 		hrt_abstime t = hrt_absolute_time();
-
 		if (ret < 0) {
 			/* poll error */
 			mavlink_log_info(mavlink_fd, "[inav] poll error on init");
@@ -441,7 +451,6 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 			/* vehicle attitude */
 			orb_copy(ORB_ID(vehicle_attitude), vehicle_attitude_sub, &att);
 			attitude_updates++;
-
 			bool updated;
 
 			/* parameter update */
@@ -687,7 +696,7 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 						last_vision_y = vision.y;
 						last_vision_z = vision.z;
 
-						warnx("VISION estimate valid");
+						PX4_WARN("VISION estimate valid");
 						mavlink_log_info(mavlink_fd, "[inav] VISION estimate valid");
 					}
 
@@ -739,7 +748,7 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 
 					mocap_valid = true;
 
-					warnx("MOCAP data valid");
+					PX4_WARN("MOCAP data valid");
 					mavlink_log_info(mavlink_fd, "[inav] MOCAP data valid");
 				}
 
@@ -801,7 +810,7 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 							/* initialize projection */
 							map_projection_init(&ref, lat, lon);
 							// XXX replace this print
-							warnx("init ref: lat=%.7f, lon=%.7f, alt=%8.4f", (double)lat, (double)lon, (double)alt);
+							PX4_WARN("init ref: lat=%.7f, lon=%.7f, alt=%8.4f", (double)lat, (double)lon, (double)alt);
 							mavlink_log_info(mavlink_fd, "[inav] init ref: %.7f, %.7f, %8.4f", (double)lat, (double)lon, (double)alt);
 						}
 					}
@@ -863,28 +872,28 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 		if ((flow_valid || sonar_valid) && t > flow.timestamp + flow_topic_timeout) {
 			flow_valid = false;
 			sonar_valid = false;
-			warnx("FLOW timeout");
+			PX4_WARN("FLOW timeout");
 			mavlink_log_info(mavlink_fd, "[inav] FLOW timeout");
 		}
 
 		/* check for timeout on GPS topic */
 		if (gps_valid && (t > (gps.timestamp_position + gps_topic_timeout))) {
 			gps_valid = false;
-			warnx("GPS timeout");
+			PX4_WARN("GPS timeout");
 			mavlink_log_info(mavlink_fd, "[inav] GPS timeout");
 		}
 
 		/* check for timeout on vision topic */
 		if (vision_valid && (t > (vision.timestamp_boot + vision_topic_timeout))) {
 			vision_valid = false;
-			warnx("VISION timeout");
+			PX4_WARN("VISION timeout");
 			mavlink_log_info(mavlink_fd, "[inav] VISION timeout");
 		}
 
 		/* check for timeout on mocap topic */
 		if (mocap_valid && (t > (mocap.timestamp_boot + mocap_topic_timeout))) {
 			mocap_valid = false;
-			warnx("MOCAP timeout");
+			PX4_WARN("MOCAP timeout");
 			mavlink_log_info(mavlink_fd, "[inav] MOCAP timeout");
 		}
 
@@ -1170,7 +1179,7 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 			/* print updates rate */
 			if (t > updates_counter_start + updates_counter_len) {
 				float updates_dt = (t - updates_counter_start) * 0.000001f;
-				warnx(
+				PX4_WARN(
 					"updates rate: accelerometer = %.1f/s, baro = %.1f/s, gps = %.1f/s, attitude = %.1f/s, flow = %.1f/s, vision = %.1f/s, mocap = %.1f/s",
 					(double)(accel_updates / updates_dt),
 					(double)(baro_updates / updates_dt),
@@ -1265,7 +1274,7 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 		}
 	}
 
-	warnx("stopped");
+	PX4_WARN("stopped");
 	mavlink_log_info(mavlink_fd, "[inav] stopped");
 	thread_running = false;
 	return 0;

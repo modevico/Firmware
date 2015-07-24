@@ -46,7 +46,7 @@ MODULES		+= modules/systemlib/mixer
 MODULES		+= modules/uORB
 #MODULES		+= modules/dataman
 #MODULES		+= modules/sdlog2
-MODULES		+= modules/simulator
+#MODULES		+= modules/simulator
 MODULES		+= modules/commander
 
 #

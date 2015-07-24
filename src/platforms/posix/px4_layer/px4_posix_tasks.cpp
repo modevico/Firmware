@@ -248,7 +248,7 @@ int px4_task_kill(px4_task_t id, int sig)
 {
 	int rv = 0;
 	pthread_t pid;
-	PX4_DEBUG("Called px4_task_kill %d", sig);
+	//PX4_DEBUG("Called px4_task_kill %d", sig);
 
 	if (id < PX4_MAX_TASKS && taskmap[id].isused && taskmap[id].pid != 0)
 		pid = taskmap[id].pid;
@@ -281,6 +281,7 @@ void px4_show_tasks()
 
 __BEGIN_DECLS
 
+unsigned long px4_getpid();
 unsigned long px4_getpid()
 {
 	return (unsigned long)pthread_self();

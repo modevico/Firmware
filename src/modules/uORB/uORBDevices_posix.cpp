@@ -253,6 +253,8 @@ uORB::DeviceNode::write(device::file_t *filp, const char *buffer, size_t buflen)
 		return -EIO;
 	}
 
+	//hrt_abstime t1, t2, t3;
+	//t1=hrt_absolute_time();
 	/* Perform an atomic copy. */
 	lock();
 	memcpy(_data, buffer, _meta->o_size);
@@ -263,7 +265,13 @@ uORB::DeviceNode::write(device::file_t *filp, const char *buffer, size_t buflen)
 	_generation++;
 
 	/* notify any poll waiters */
+	//t2=hrt_absolute_time();
 	poll_notify(POLLIN);
+	//t3=hrt_absolute_time();
+	//if(strcmp(_meta->o_name,"vehicle_control_mode")==0)
+	//PX4_DEBUG("MsgName: %30s, t1: %lu, t2: %lu, t3: %lu, dt1: %lu, dt2: %lu",_meta->o_name,
+//		  (unsigned long) t1, (unsigned long) t2, (unsigned long) t3,
+//		  (unsigned long) (t2-t1), (unsigned long) (t3-t2));
 
 	_published = true;
 

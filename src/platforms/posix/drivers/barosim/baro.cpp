@@ -641,6 +641,7 @@ BAROSIM::collect()
 
 	/* read the most recent measurement - read offset/size are hardcoded in the interface */
 	ret = _interface->dev_read(0, (void *)&baro_report, sizeof(baro_report));
+
 	if (ret < 0) {
 		perf_count(_comms_errors);
 		perf_end(_sample_perf);

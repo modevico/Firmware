@@ -87,6 +87,7 @@ static const bool arming_transitions[vehicle_status_s::ARMING_STATE_MAX][vehicle
 };
 
 // You can index into the array with an arming_state_t in order to get it's textual representation
+// FIXME,  this is redundant since commander.cpp specifies arming_states_str[]
 static const char * const state_names[vehicle_status_s::ARMING_STATE_MAX] = {
 	"ARMING_STATE_INIT",
 	"ARMING_STATE_STANDBY",
@@ -139,7 +140,8 @@ arming_state_transition(struct vehicle_status_s *status,		///< current vehicle s
 
 		/* enforce lockdown in HIL */
 		if (status->hil_state == vehicle_status_s::HIL_STATE_ON) {
-			armed->lockdown = true;
+			//I don't think we need this anymore
+			//armed->lockdown = true;
 			prearm_ret = OK;
 			status->condition_system_sensors_initialized = true;
 
@@ -250,6 +252,8 @@ arming_state_transition(struct vehicle_status_s *status,		///< current vehicle s
 			}
 			feedback_provided = true;
 			valid_transition = false;
+			//PX4_DEBUG("Setting STANDBY_ERROR.  %d, %d, %d, %d, %d",
+			//	  status->hil_state, new_arming_state, status->arming_state, status->condition_system_sensors_initialized, fRunPreArmChecks );
 			status->arming_state = vehicle_status_s::ARMING_STATE_STANDBY_ERROR;
 		}
 
@@ -278,6 +282,8 @@ arming_state_transition(struct vehicle_status_s *status,		///< current vehicle s
 		}
 #undef WARNSTR
 	}
+
+	//PX4_DEBUG("Arm Transition.  Current: %d, New: %d, Armed: %d, Ret: %d",current_arming_state, new_arming_state, armed->armed, ret);
 
 	return ret;
 }

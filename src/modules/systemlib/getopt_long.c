@@ -88,6 +88,7 @@ gpietsch@comcast.net
 #include <stdlib.h>
 #include <string.h>
 #include "getopt_long.h"
+#include "px4_log.h"
 
 /* macros */
 
@@ -263,7 +264,7 @@ getopt_internal (int argc, char **argv, const char *shortopts,
                     {
                       /* we have ambiguous options */
                       if (opterr)
-                        fprintf (stderr, "%s: option `%s' is ambiguous "
+                        PX4_ERR ( "%s: option `%s' is ambiguous "
                                  "(could be `--%s' or `--%s')\n",
                                  argv[0],
                                  argv[optind],
@@ -285,7 +286,7 @@ getopt_internal (int argc, char **argv, const char *shortopts,
         {
           /* couldn't find option in shortopts */
           if (opterr)
-            fprintf (stderr,
+            PX4_ERR (
                      "%s: invalid option -- `-%c'\n",
                      argv[0], argv[optind][optwhere]);
           optwhere++;
@@ -323,11 +324,15 @@ getopt_internal (int argc, char **argv, const char *shortopts,
         {
           if (opterr)
             {
-              fprintf (stderr, "%s: argument required for option `", argv[0]);
+              PX4_ERR ( "%s: argument required for option ", argv[0]);
               if (longopt_match >= 0)
-                fprintf (stderr, "--%s'\n", longopts[longopt_match].name);
+               {
+                PX4_ERR ( "--%s\n", longopts[longopt_match].name);
+               }
               else
-                fprintf (stderr, "-%c'\n", *cp);
+                {
+                PX4_ERR ( "-%c\n", *cp);
+                }
             }
           optind++;
           return (optopt = ':');

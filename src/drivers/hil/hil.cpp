@@ -419,8 +419,8 @@ HIL::task_main()
 			orb_copy(_primary_pwm_device ? ORB_ID_VEHICLE_ATTITUDE_CONTROLS :
 				     ORB_ID(actuator_controls_1), _t_actuators, &_controls);
 
-			/* can we mix? */
-			if (_mixers != nullptr) {
+                        /* can we mix? */
+			if (_armed && _mixers != nullptr) {
 				/* do mixing */
 				outputs.noutputs = _mixers->mix(&outputs.output[0], num_outputs, NULL);
 				outputs.timestamp = hrt_absolute_time();
@@ -446,6 +446,8 @@ HIL::task_main()
 
 				/* and publish for anyone that cares to see */
 				orb_publish(ORB_ID(actuator_outputs), _t_outputs, &outputs);
+				//PX4_DEBUG( "ts(%lu) %f, %f, %f, %f", 
+				//	(unsigned long) outputs.timestamp, outputs.output[0], outputs.output[1], outputs.output[2], outputs.output[3] );
 			}
 		}
 
@@ -866,8 +868,8 @@ extern "C" __EXPORT int hil_main(int argc, char *argv[]);
 
 static void
 usage() {
-	fprintf(stderr, "HIL: unrecognized command, try:\n");
-	fprintf(stderr, "  mode_pwm, mode_gpio_serial, mode_pwm_serial, mode_pwm_gpio, mode_port2_pwm8, mode_port2_pwm12, mode_port2_pwm16\n");
+	PX4_WARN( "HIL: unrecognized command, try:\n");
+	PX4_WARN( "  mode_pwm, mode_gpio_serial, mode_pwm_serial, mode_pwm_gpio, mode_port2_pwm8, mode_port2_pwm12, mode_port2_pwm16\n");
 }
 
 int

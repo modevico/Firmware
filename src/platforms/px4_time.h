@@ -1,18 +1,18 @@
 #pragma once
 
 #include <sys/types.h>
-#include <time.h>
+
 
 #if defined(__PX4_LINUX) || defined(__PX4_NUTTX)
 
+#include <time.h>
 #define px4_clock_gettime clock_gettime
 #define px4_clock_settime clock_settime
 
 #elif defined(__PX4_QURT)
 
+#include <time.h>
 #include <sys/timespec.h>
-
-#define CLOCK_REALTIME 1
 
 __BEGIN_DECLS
 

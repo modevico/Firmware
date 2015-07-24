@@ -31,9 +31,8 @@
  *
  ****************************************************************************/
 
-#include <px4_log.h>
-#include <semaphore.h>
 #include <px4_workqueue.h>
+#include <semaphore.h>
 
 #pragma once
 

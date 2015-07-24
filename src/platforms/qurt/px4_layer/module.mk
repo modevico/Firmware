@@ -58,9 +58,7 @@ SRCS		 = 	\
 			sq_remfirst.c \
 			sq_addafter.c \
 			dq_rem.c \
-                        hrt_work.c \
                         qurt_stubs.c \
-                        qurt_hacks.c \
                         main.cpp
 ifeq ($(CONFIG),qurt_hello)
 SRCS +=			commands_hello.c
@@ -73,6 +71,9 @@ SRCS +=			commands_muorb_test.c
 endif
 ifeq ($(CONFIG),qurt_hil)
 SRCS +=			commands_hil.c
+endif
+ifeq ($(CONFIG),qurt_adsp)
+SRCS +=			commands_adsp.c
 endif
 
 
