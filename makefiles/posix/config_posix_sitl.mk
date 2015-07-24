@@ -75,13 +75,13 @@ MODULES		+= lib/conversion
 # Linux port
 #
 MODULES		+= platforms/posix/px4_layer
-#MODULES		+= platforms/posix/drivers/accelsim
-#MODULES		+= platforms/posix/drivers/gyrosim
-#MODULES		+= platforms/posix/drivers/adcsim
-#MODULES		+= platforms/posix/drivers/barosim
-#MODULES		+= platforms/posix/drivers/tonealrmsim
-#MODULES		+= platforms/posix/drivers/airspeedsim
-#MODULES 	+= platforms/posix/drivers/gpssim
+MODULES		+= platforms/posix/drivers/accelsim
+MODULES		+= platforms/posix/drivers/gyrosim
+MODULES		+= platforms/posix/drivers/adcsim
+MODULES		+= platforms/posix/drivers/barosim
+MODULES		+= platforms/posix/drivers/tonealrmsim
+MODULES		+= platforms/posix/drivers/airspeedsim
+MODULES 	+= platforms/posix/drivers/gpssim
 
 #
 # Unit tests
