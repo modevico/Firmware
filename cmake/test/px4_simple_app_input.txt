@@ -1,0 +1,5 @@
+uorb start
+sleep 1
+px4_simple_app
+sleep 1
+shutdown
