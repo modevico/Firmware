@@ -4,6 +4,8 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project(px4 CXX C ASM)
 
+message(STATUS "Found ar: -${CMAKE_AR}-")
+
 if (NOT ${CMAKE_VERSION} VERSION_LESS 3.0.0)
 	cmake_policy(SET CMP0046 NEW) # no non-existent targets as dependencies
 endif()
@@ -208,12 +210,11 @@ if(${TARGET_OS} STREQUAL "posix")
 elseif(${TARGET_OS} STREQUAL "qurt")
 	set(DSPAL_ROOT src/lib/dspal)
 	include_directories(
-		-I${DSPAL_ROOT}
-		-I${DSPAL_ROOT}/dspal/include 
-		-I${DSPAL_ROOT}/dspal/sys 
-		-I${DSPAL_ROOT}/dspal/sys/sys 
-		-I${DSPAL_ROOT}/mpu_spi/inc
-		-I${DSPAL_ROOT}/uart_esc/inc
+		${DSPAL_ROOT}/include 
+		${DSPAL_ROOT}/sys 
+		${DSPAL_ROOT}/sys/sys 
+		${DSPAL_ROOT}/mpu_spi/inc
+		${DSPAL_ROOT}/uart_esc/inc
     		src/platforms/qurt/include
     		src/platforms/posix/include
 		)
