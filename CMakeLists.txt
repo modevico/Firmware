@@ -64,6 +64,7 @@ endif()
 
 if (${TARGET_NAME} STREQUAL "nuttx-px4fmu-v2-simple")
 elseif (${TARGET_NAME} STREQUAL "posix-sitl-simple")
+elseif (${TARGET_NAME} STREQUAL "qurt-hil-simple")
 else()
 	message(FATAL_ERROR "not implemented yet: ${TARGET_NAME}")
 endif()
@@ -227,95 +228,14 @@ include_directories(
 	${CMAKE_BINARY_DIR}/src/modules
 	)
 
-set(WARNINGS
-    -Wall
-    -Wextra
-    -Wdouble-promotion
-    -Wshadow
-    -Wfloat-equal
-    -Wframe-larger-than=1024
-    -Wpointer-arith
-    -Wlogical-op
-    -Wmissing-declarations
-    -Wpacked
-    -Wno-unused-parameter
-    -Werror=format-security
-    -Werror=array-bounds
-    -Wfatal-errors
-    -Wformat=1
-    -Werror=unused-but-set-variable
-    -Werror=unused-variable
-    -Werror=double-promotion
-    -Werror=reorder
-	-Werror=uninitialized
-	-Werror=init-self 
-    #-Wcast-qual  - generates spurious noreturn attribute warnings,
-    #               try again later
-    #-Wconversion - would be nice, but too many "risky-but-safe"
-    #               conversions in the code
-    #-Wcast-align - would help catch bad casts in some cases,
-    #               but generates too many false positives
-    )
-
-set(OPT_FLAGS
-	-Os -g3
-	)
-
-#=============================================================================
-#		c flags
-#
-set(C_WARNINGS
-	-Wbad-function-cast
-	-Wstrict-prototypes
-	-Wold-style-declaration
-	-Wmissing-parameter-type
-	-Wmissing-prototypes
-	-Wnested-externs
-	)
-set(C_FLAGS
-	-std=gnu99
-	-fno-common
-	)
-
-#=============================================================================
-#		cxx flags
-#
-set(CXX_WARNINGS
-	-Wno-missing-field-initializers
-	)
-set(CXX_FLAGS
-	-fno-exceptions
-	-fno-rtti
-	-std=gnu++0x
-	-fno-threadsafe-statics
-	-DCONFIG_WCHAR_BUILTIN
-	-D__CUSTOM_FILE_IO__
-	)
-
 add_definitions(
 	-DCONFIG_ARCH_BOARD_${BOARD_CONFIG}
 	)
 
 #=============================================================================
-#		ld flags
-#
-set(LD_FLAGS
-	-Wl,--warn-common
-	-Wl,--gc-sections
-	)
-
-#=============================================================================
-#		misc flags
-#
-set(VISIBILITY_FLAGS
-	-fvisibility=hidden
-	"-include ${CMAKE_SOURCE_DIR}/src/include/visibility.h"
-	)
-set(EXE_LINK_FLAGS)
-
-#=============================================================================
 #		os/board specific flags
 #
+set(CMAKE_SYSTEM_VERSION 1)
 if (${TARGET_OS} STREQUAL "nuttx")
 	include_directories(
 		${NUTTX_EXPORT_DIR}/include
@@ -326,6 +246,9 @@ if (${TARGET_OS} STREQUAL "nuttx")
 	add_definitions(
 		-D__PX4_NUTTX
 		)
+	# Used to call CMAKE_SYSTEM_NAME-compiler-CMAKE_SYSTEM_PROCESSOR.cmake
+	set(CMAKE_SYSTEM_NAME nuttx)
+	set(CMAKE_SYSTEM_PROCESSOR arm)
 elseif(${TARGET_OS} STREQUAL "posix")
 	include_directories(
 		src/platforms/posix/include
@@ -336,7 +259,16 @@ elseif(${TARGET_OS} STREQUAL "posix")
 		"-Dnoreturn_function=__attribute__\(\(noreturn\)\)"
 		-DCLOCK_MONOTONIC=1
 		)
+	# Used to call CMAKE_SYSTEM_NAME-compiler-CMAKE_SYSTEM_PROCESSOR.cmake
+	set(CMAKE_SYSTEM_NAME posix)
+	set(CMAKE_SYSTEM_PROCESSOR native)
+elseif(${TARGET_OS} STREQUAL "qurt")
+	# Used to call CMAKE_SYSTEM_NAME-compiler-CMAKE_SYSTEM_PROCESSOR.cmake
+	set(CMAKE_SYSTEM_NAME qurt)
+	set(CMAKE_SYSTEM_PROCESSOR hexagon)
 endif()
+
+#set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/cmake/${CMAKE_SYSTEM_NAME}-${COMPILER}-${CMAKE_SYSTEM_PROCESSOR}.cmake)
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Arm")
 	if ("${TARGET_BOARD}" STREQUAL "px4fmu-v2")
@@ -355,29 +287,29 @@ endif()
 #=============================================================================
 #		set cmake flags
 #
-join(OUT CMAKE_C_FLAGS
-	LIST
-		${CMAKE_C_FLAGS}
-		${C_FLAGS}
-		${WARNINGS}
-		${C_WARNINGS}
-		${OPT_FLAGS}
-		${VISIBILITY_FLAGS}
-	GLUE " ")
+#join(OUT CMAKE_C_FLAGS
+#	LIST
+#		${CMAKE_C_FLAGS}
+#		${C_FLAGS}
+#		${WARNINGS}
+#		${C_WARNINGS}
+#		${OPT_FLAGS}
+#		${VISIBILITY_FLAGS}
+#	GLUE " ")
 
-join(OUT CMAKE_CXX_FLAGS
-	LIST
-		${CMAKE_CXX_FLAGS}
-		${CXX_FLAGS}
-		${WARNINGS}
-		${CXX_WARNINGS}
-		${OPT_FLAGS}
-		${VISIBILITY_FLAGS}
-	GLUE " ")
+#join(OUT CMAKE_CXX_FLAGS
+#	LIST
+#		${CMAKE_CXX_FLAGS}
+#		${CXX_FLAGS}
+#		${WARNINGS}
+#		${CXX_WARNINGS}
+#		${OPT_FLAGS}
+#		${VISIBILITY_FLAGS}
+#	GLUE " ")
 
-join(OUT CMAKE_EXE_LINKER_FLAGS
-	LIST ${CMAKE_EXE_LINKER_FLAGS} ${LD_FLAGS} ${EXE_LINK_FLAGS}
-	GLUE " ")
+#join(OUT CMAKE_EXE_LINKER_FLAGS
+#	LIST ${CMAKE_EXE_LINKER_FLAGS} ${LD_FLAGS} ${EXE_LINK_FLAGS}
+#	GLUE " ")
 
 ##############################################################################
 #	Modules
@@ -438,6 +370,11 @@ elseif (${TARGET_OS} STREQUAL "posix")
 		#./src/platforms/posix/drivers/barosim
 		#./src/platforms/posix/drivers/gyrosim
 		)
+elseif (${TARGET_OS} STREQUAL "qurt")
+	list(APPEND module_directories
+		./src/platforms/posix/px4_layer
+		./src/platforms/posix/work_queue
+		)
 endif()
 
 list(APPEND module_directories
@@ -490,6 +427,11 @@ set(installed_targets)
 
 if ("${TARGET_OS}" STREQUAL "posix")
 	add_executable(main ./src/platforms/posix/main.cpp)
+	target_link_libraries(main ${module_list} pthread)
+
+
+elseif ("${TARGET_OS}" STREQUAL "qurt")
+	add_executable(main ./src/platforms/qurt/px4_layer/main.cpp)
 	target_link_libraries(main ${module_list} pthread)
 
 
