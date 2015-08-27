@@ -15,14 +15,6 @@ endif()
 #=============================================================================
 #		Build options
 #
-set(NUTTX_BUILD_THREADS "4" CACHE STRING
-	"number of threads to use when building NuttX")
-set(TARGET_OS "nuttx" CACHE STRING "desired operating system")
-set_property(CACHE TARGET_OS PROPERTY STRINGS nuttx posix qurt)
-
-set(TARGET_BOARD "px4fmu-v2" CACHE STRING "target board")
-set_property(CACHE TARGET_BOARD PROPERTY STRINGS px4fmu-v2 sitl)
-
 set(TARGET_LABEL "simple" CACHE STRING "module set label")
 set_property(CACHE TARGET_LABEL PROPERTY STRINGS simple default)
 
@@ -39,7 +31,6 @@ set(VERSION_MAJOR 0)
 set(VERSION_MINOR 1)
 set(VERSION_PATCH 2)
 set(PACKAGE_CONTACT "px4users@googlegroups.com")
-set(nuttx_configs px4fmu-v2)
 
 #=============================================================================
 #		Computed parameters
@@ -48,23 +39,19 @@ set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 set(POSIX_APPS_HEADER ${CMAKE_BINARY_DIR}/apps.h)
 set(MSG_OUT_PATH ${CMAKE_BINARY_DIR}/src/modules/uORB/topics)
 set(TARGET_NAME "${TARGET_OS}-${TARGET_BOARD}-${TARGET_LABEL}")
-set(NUTTX_EXPORT_DIR ${CMAKE_BINARY_DIR}/${TARGET_BOARD}/NuttX/nuttx-export)
 string(TOUPPER ${TARGET_BOARD} BOARD_UPPER)
 string(REPLACE "-" "_" BOARD_CONFIG ${BOARD_UPPER})
+
+if(NOT DEFAULT_VISIBILITY)
+	set(DEFAULT_VISIBILITY "hidden")
+else()
+	set(DEFAULT_VISIBILITY "default")
+endif()
 
 #=============================================================================
 #		Config validation
 #
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Arm")
-else()
-	if (${TARGET_BOARD} STREQUAL "px4fmu-v2")
-		message(FATAL_ERROR "Can only build ${TARGET_NAME} on arm")
-	endif()
-endif()
-
-if (${TARGET_NAME} STREQUAL "nuttx-px4fmu-v2-simple")
-elseif (${TARGET_NAME} STREQUAL "posix-sitl-simple")
-elseif (${TARGET_NAME} STREQUAL "qurt-hil-simple")
+if (${TARGET_NAME} STREQUAL "qurt-hil-simple")
 else()
 	message(FATAL_ERROR "not implemented yet: ${TARGET_NAME}")
 endif()
@@ -90,49 +77,18 @@ add_custom_target(submodule_clean
 
 # add all git submodules and paths
 add_git_submodule(mavlink mavlink/include/mavlink/v1.0)
-add_git_submodule(nuttx NuttX)
 add_git_submodule(genmsg Tools/genmsg)
 add_git_submodule(gencpp Tools/gencpp)
 add_git_submodule(gtest unittests/gtest)
 add_git_submodule(eigen src/lib/eigen) 
+if(${TARGET_OS} STREQUAL "qurt")
+#add_git_submodule(dspal src/lib/dspal) 
+endif()
 
 ##############################################################################
 #	Programs
 #
-find_program(OPENOCD openocd HINT ../../sat/bin/)
 find_package(PythonInterp REQUIRED)
-
-##############################################################################
-#	NuttX
-#
-
-#=============================================================================
-#		Patching
-#
-add_custom_target(nuttx_patch)
-file(GLOB NUTTX_PATCHES RELATIVE ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/nuttx-patches/*.patch)
-foreach(PATCH IN LISTS NUTTX_PATCHES)
-    string(REPLACE "/" "_" PATCH_NAME ${PATCH})
-    message(STATUS nuttx-patch: ${PATCH})
-    add_custom_command(OUTPUT nuttx_patch_${PATCH_NAME}.stamp
-        COMMAND patch -p0 -N  < ${CMAKE_SOURCE_DIR}/${PATCH}
-        COMMAND touch nuttx_patch_${PATCH_NAME}.stamp
-        )
-    add_custom_target(nuttx_patch_${PATCH_NAME}
-        DEPENDS nuttx_patch_${PATCH_NAME}.stamp git_nuttx)
-    add_dependencies(nuttx_patch nuttx_patch_${PATCH_NAME})
-endforeach()
-add_dependencies(nuttx_patch git_nuttx)
-
-#=============================================================================
-#		Manage exports
-#
-add_custom_target(link_exports)
-foreach(config ${nuttx_configs})
-    add_nuttx_export(${config})
-    add_dependencies(link_exports link_export_${config})
-endforeach()
 
 ##############################################################################
 #	Code Generation
@@ -236,20 +192,7 @@ add_definitions(
 #		os/board specific flags
 #
 set(CMAKE_SYSTEM_VERSION 1)
-if (${TARGET_OS} STREQUAL "nuttx")
-	include_directories(
-		${NUTTX_EXPORT_DIR}/include
-		${NUTTX_EXPORT_DIR}/include/cxx
-		${NUTTX_EXPORT_DIR}/arch/chip
-		${NUTTX_EXPORT_DIR}/arch/common
-		)
-	add_definitions(
-		-D__PX4_NUTTX
-		)
-	# Used to call CMAKE_SYSTEM_NAME-compiler-CMAKE_SYSTEM_PROCESSOR.cmake
-	set(CMAKE_SYSTEM_NAME nuttx)
-	set(CMAKE_SYSTEM_PROCESSOR arm)
-elseif(${TARGET_OS} STREQUAL "posix")
+if(${TARGET_OS} STREQUAL "posix")
 	include_directories(
 		src/platforms/posix/include
 		)
@@ -263,53 +206,27 @@ elseif(${TARGET_OS} STREQUAL "posix")
 	set(CMAKE_SYSTEM_NAME posix)
 	set(CMAKE_SYSTEM_PROCESSOR native)
 elseif(${TARGET_OS} STREQUAL "qurt")
+	set(DSPAL_ROOT src/lib/dspal)
+	include_directories(
+		-I${DSPAL_ROOT}
+		-I${DSPAL_ROOT}/dspal/include 
+		-I${DSPAL_ROOT}/dspal/sys 
+		-I${DSPAL_ROOT}/dspal/sys/sys 
+		-I${DSPAL_ROOT}/mpu_spi/inc
+		-I${DSPAL_ROOT}/uart_esc/inc
+    		src/platforms/qurt/include
+    		src/platforms/posix/include
+		)
+	add_definitions(
+		-D__PX4_QURT -D__PX4_POSIX
+    		-fvisibility=${DEFAULT_VISIBILITY} -include ${PX4_INCLUDE_DIR}visibility.h
+		)
 	# Used to call CMAKE_SYSTEM_NAME-compiler-CMAKE_SYSTEM_PROCESSOR.cmake
 	set(CMAKE_SYSTEM_NAME qurt)
 	set(CMAKE_SYSTEM_PROCESSOR hexagon)
 endif()
 
 #set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/cmake/${CMAKE_SYSTEM_NAME}-${COMPILER}-${CMAKE_SYSTEM_PROCESSOR}.cmake)
-
-if (${CMAKE_SYSTEM_NAME} STREQUAL "Arm")
-	if ("${TARGET_BOARD}" STREQUAL "px4fmu-v2")
-		set(ARM_BUILD_FLAGS
-			-mcpu=cortex-m4
-			-mthumb
-			-march=armv7e-m
-			-mfpu=fpv4-sp-d16
-			-mfloat-abi=hard
-			)
-		list(APPEND C_FLAGS ${ARM_BUILD_FLAGS})
-		list(APPEND CXX_FLAGS ${ARM_BUILD_FLAGS})
-	endif()
-endif()
-
-#=============================================================================
-#		set cmake flags
-#
-#join(OUT CMAKE_C_FLAGS
-#	LIST
-#		${CMAKE_C_FLAGS}
-#		${C_FLAGS}
-#		${WARNINGS}
-#		${C_WARNINGS}
-#		${OPT_FLAGS}
-#		${VISIBILITY_FLAGS}
-#	GLUE " ")
-
-#join(OUT CMAKE_CXX_FLAGS
-#	LIST
-#		${CMAKE_CXX_FLAGS}
-#		${CXX_FLAGS}
-#		${WARNINGS}
-#		${CXX_WARNINGS}
-#		${OPT_FLAGS}
-#		${VISIBILITY_FLAGS}
-#	GLUE " ")
-
-#join(OUT CMAKE_EXE_LINKER_FLAGS
-#	LIST ${CMAKE_EXE_LINKER_FLAGS} ${LD_FLAGS} ${EXE_LINK_FLAGS}
-#	GLUE " ")
 
 ##############################################################################
 #	Modules
@@ -341,19 +258,7 @@ list(APPEND module_directories
 	./src/platforms/common
 	)
 
-if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Arm")
-	list(APPEND module_directories
-		./src/drivers/stm32
-	)
-endif()
-
-if (${TARGET_OS} STREQUAL "nuttx")
-	list(APPEND module_directories
-		./src/platforms/nuttx
-		./src/platforms/nuttx/px4_layer
-	)
-
-elseif (${TARGET_OS} STREQUAL "posix")
+if (${TARGET_OS} STREQUAL "posix")
 	list(APPEND module_directories
 		#./src/platforms/posix/tests/hrt_test
 		#./src/platforms/posix/tests/wqueue
@@ -422,7 +327,6 @@ endforeach()
 #=============================================================================
 #	Build
 
-link_directories(${NUTTX_EXPORT_DIR}/libs)
 set(installed_targets)
 
 if ("${TARGET_OS}" STREQUAL "posix")
@@ -433,55 +337,6 @@ if ("${TARGET_OS}" STREQUAL "posix")
 elseif ("${TARGET_OS}" STREQUAL "qurt")
 	add_executable(main ./src/platforms/qurt/px4_layer/main.cpp)
 	target_link_libraries(main ${module_list} pthread)
-
-
-elseif ("${TARGET_OS}" STREQUAL "nuttx")
-	message(STATUS "modules: ${module_list}")
-	add_executable(main ./cmake/builtin_commands.c)
-
-	add_dependencies(main NuttX_${TARGET_BOARD})
-	target_link_libraries(main
-		apps
-		nuttx
-		${module_list}
-		c
-		m
-		nuttx
-		)
-
-	# startup library
-	file(GLOB STARTUP_OBJS ${NUTTX_EXPORT_DIR}/startup/*.o)
-	if(STARTUP_OBJS)
-		message(STATUS startup objects: ${STARTUP_OBJS})
-		add_library(startup EXCLUDE_FROM_ALL STATIC
-			${STARTUP_OBJS})
-		add_dependencies(startup NuttX_${TARGET_BOARD})
-		set_source_files_properties(${STARTUP_OBJS}
-			PROPERTIES
-			# Identifies this as an object file
-			EXTERNAL_OBJECT TRUE
-			# Avoids need for file to exist at configure-time
-			GENERATED TRUE
-			)
-		set_target_properties(startup PROPERTIES
-			LINKER_LANGUAGE C
-			)
-		target_link_libraries(main startup)
-	endif()
-
-	# generate the firmware
-	if ("${TARGET_BOARD}" STREQUAL "sitl")
-		target_link_libraries(main pthread z)
-	else()
-		set(MAIN_LINK_FLAGS
-			"-T${NUTTX_EXPORT_DIR}/build/ld.script"
-			"-Wl,-Map=${CMAKE_BINARY_DIR}/main.map"
-			)
-		join(OUT MAIN_LINK_FLAGS LIST ${MAIN_LINK_FLAGS} GLUE " ")
-		set_target_properties(main PROPERTIES LINK_FLAGS ${MAIN_LINK_FLAGS})
-		generate_firmware(${TARGET_NAME})
-	endif()
-
 endif()
 
 list(APPEND installed_targets main)
