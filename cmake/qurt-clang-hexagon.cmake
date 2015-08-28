@@ -76,7 +76,7 @@ list2string(HEXAGON_INCLUDE_DIRS
 # Base CPU flags for each of the supported architectures.
 #
 set(ARCHCPUFLAGS
-	-m$(V_ARCH)
+	-m${V_ARCH}
 	-G0
 	)
 
@@ -175,7 +175,6 @@ list2string(CXXFLAGS
 	${ARCHXXINCLUDES}
 	${INSTRUMENTATIONDEFINES}
 	${ARCHDEFINES}
-	-DCONFIG_WCHAR_BUILTIN
 	${EXTRADEFINES}
 	${EXTRACXXFLAGS}
 	${HEXAGON_INCLUDE_DIRS}
