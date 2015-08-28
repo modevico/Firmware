@@ -3,6 +3,8 @@
 # For Actual flight we need to link against the driver dynamic libraries
 LDFLAGS	+= -L${DSPAL_ROOT}/mpu_spi/hexagon_Debug_dynamic_toolv64/ship -lmpu9x50
 LDFLAGS	+= -L${DSPAL_ROOT}/uart_esc/hexagon_Debug_dynamic_toolv64/ship -luart_esc
+LDFLAGS	+= -L${DSPAL_ROOT}/csr_gps/hexagon_Debug_dynamic_toolv64/ship -lcsr_gps
+LDFLAGS	+= -L${DSPAL_ROOT}/rc_receiver/hexagon_Debug_dynamic_toolv64/ship -lrc_receiver
 
 #
 # Makefile for the EAGLE QuRT *default* configuration
@@ -13,8 +15,10 @@ LDFLAGS	+= -L${DSPAL_ROOT}/uart_esc/hexagon_Debug_dynamic_toolv64/ship -luart_es
 #
 MODULES		+= drivers/device
 MODULES		+= modules/sensors
-#MODULES		+= platforms/qurt/drivers/mpu9x50
-#MODULES		+= platforms/qurt/drivers/uart_esc
+MODULES		+= drivers/mpu9x50
+MODULES		+= drivers/uart_esc
+MODULES		+= drivers/rc_receiver
+MODULES		+= drivers/csr_gps
 
 #
 # System commands
@@ -47,6 +51,7 @@ MODULES		+= modules/systemlib/mixer
 MODULES		+= modules/uORB
 #MODULES		+= modules/dataman
 MODULES		+= modules/commander
+MODULES 	+= modules/controllib
 
 #
 # Libraries
@@ -61,6 +66,7 @@ MODULES		+= lib/conversion
 # QuRT port
 #
 MODULES		+= platforms/qurt/px4_layer
+MODULES		+= platforms/posix/work_queue
 
 #
 # Unit tests

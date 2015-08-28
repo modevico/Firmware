@@ -1,6 +1,6 @@
 ############################################################################
 #
-#   Copyright (c) 2014 PX4 Development Team. All rights reserved.
+#   Copyright (C) 2015 Mark Charlebois. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -32,35 +32,17 @@
 ############################################################################
 
 #
-# NuttX / uORB adapter library
+# Makefile to build the MPU9x50 driver.
 #
 
-MODULE_NAME = dspal
+MODULE_COMMAND	= mpu9x50
 
-SRCDIR=$(dir $(MODULE_MK))
+SRCS		+= mpu9x50_main.cpp
+SRCS		+= mpu9x50_params.c
 
-SRCS		 = 	\
-			px4_qurt_impl.cpp \
-			px4_qurt_tasks.cpp  \
-			lib_crc32.c \
-			drv_hrt.c \
-                        qurt_stubs.c \
-                        main.cpp
-ifeq ($(CONFIG),qurt_hello)
-SRCS +=			commands_hello.c
-endif
-ifeq ($(CONFIG),qurt_default)
-SRCS +=			commands_default.c
-endif
-ifeq ($(CONFIG),qurt_muorb_test)
-SRCS +=			commands_muorb_test.c
-endif
-ifeq ($(CONFIG),qurt_hil)
-SRCS +=			commands_hil.c
-endif
-ifeq ($(CONFIG),qurt_adsp)
-SRCS +=			commands_adsp.c
-endif
+MODULE_STACKSIZE	= 1200
 
+EXTRACXXFLAGS	= -Weffc++
 
 MAXOPTIMIZATION	 = -Os
+

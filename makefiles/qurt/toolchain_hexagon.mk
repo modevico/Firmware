@@ -130,6 +130,8 @@ ARCHDEFINES		+= -DCONFIG_ARCH_BOARD_$(CONFIG_BOARD) \
 			    -I$(DSPAL_ROOT)/mpu_spi/inc/ \
 			    -I$(DSPAL_ROOT)/uart_esc/inc/ \
 			    -I$(DSPAL_ROOT)/bmp280/inc/ \
+			    -I$(DSPAL_ROOT)/csr_gps/inc/ \
+			    -I$(DSPAL_ROOT)/rc_receiver/inc/ \
 			    -I$(HEXAGON_TOOLS_ROOT)/gnu/hexagon/include \
 			    -I$(PX4_BASE)/src/lib/eigen \
 			    -I$(PX4_BASE)/src/platforms/qurt/include \

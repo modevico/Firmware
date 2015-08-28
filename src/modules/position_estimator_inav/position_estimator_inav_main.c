@@ -190,6 +190,8 @@ static void write_debug_log(const char *msg, float dt, float x_est[2], float y_e
 	float acc[3], float corr_gps[3][2], float w_xy_gps_p, float w_xy_gps_v, float corr_mocap[3][1], float w_mocap_p,
 	float corr_vision[3][2], float w_xy_vision_p, float w_z_vision_p, float w_xy_vision_v)
 {
+	return;
+#ifndef __PX4_QURT
 	FILE *f = fopen(PX4_ROOTFSDIR"/fs/microsd/inav.log", "a");
 
 	if (f) {
@@ -213,6 +215,7 @@ static void write_debug_log(const char *msg, float dt, float x_est[2], float y_e
 
 	fsync(fileno(f));
 	fclose(f);
+#endif
 }
 #else
 #define write_debug_log(...) 
@@ -384,7 +387,13 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 	};
 
 	/* wait for initial baro value */
+#ifdef __PX4_QURT
+	// WARNING skipping
+	PX4_WARN("Hacked to skip baro initialization for testing.");
+	bool wait_baro = false;
+#else
 	bool wait_baro = true;
+#endif
 
 	thread_running = true;
 

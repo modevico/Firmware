@@ -2105,6 +2105,7 @@ Sensors::task_main()
 
 	/* start individual sensors */
 	int ret = 0;
+#if 0
 	do { /* create a scope to handle exit with break */
 		ret = accel_init();
 		if (ret) break;
@@ -2128,7 +2129,7 @@ Sensors::task_main()
 		}
 		return;
 	}
-
+#endif
 	/*
 	 * do subscriptions
 	 */

@@ -114,19 +114,6 @@ diff --git a/src/modules/sensors/sensors.cpp b/src/modules/sensors/sensors.cpp
 index 3fa4458..0ef1883 100644
 --- a/src/modules/sensors/sensors.cpp
 +++ b/src/modules/sensors/sensors.cpp
-@@ -1099,7 +1099,12 @@ Sensors::gyro_poll(struct sensor_combined_s &raw)
- 		raw.gyro_raw[1] = gyro_report.y_raw;
- 		raw.gyro_raw[2] = gyro_report.z_raw;
- 
-+#ifdef __PX4_QURT
-+// Temporary fix required due to lack of time sync between apps and dsp cores
-+		raw.timestamp = hrt_absolute_time();
-+#else
- 		raw.timestamp = gyro_report.timestamp;
-+#endif
- 		raw.gyro_errcount = gyro_report.error_count;
- 		raw.gyro_temp = gyro_report.temperature;
- 	}
 @@ -2068,6 +2073,7 @@ Sensors::task_main()
  
  	/* start individual sensors */

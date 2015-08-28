@@ -179,22 +179,6 @@ __EXPORT extern int __px4_log_level_current;
 	__px4__log_endline
 
 /****************************************************************************
- * __px4_log_named_cond:
- * Convert a message in the form:
- * 	PX4_LOG_COND(__dbg_enabled, "val is %d", val);
- * to
- * 	printf("%-5s val is %d\n", "LOG", val);
- * if the first arg/condition is true.
- ****************************************************************************/
-#define __px4_log_named_cond(name, cond, FMT, ...) \
-	__px4__log_startcond(cond)\
-	"%s " \
-	FMT\
-	__px4__log_end_fmt \
-	,name, ##__VA_ARGS__\
-	__px4__log_endline
-
-/****************************************************************************
  * __px4_log:
  * Convert a message in the form:
  * 	PX4_WARN("val is %d", val);
@@ -387,6 +371,7 @@ __EXPORT extern int __px4_log_level_current;
 #define PX4_DEBUG(FMT, ...) 	__px4_log_omit(_PX4_LOG_LEVEL_DEBUG, FMT, ##__VA_ARGS__)
 
 #endif
+#define PX4_LOG_COND(cond, FMT, ...) 	__px4_log_cond(cond, FMT, ##__VA_ARGS__)
 #define PX4_LOG_NAMED(name, FMT, ...) 	__px4_log_named_cond(name, true, FMT, ##__VA_ARGS__)
 #define PX4_LOG_NAMED_COND(name, cond, FMT, ...) __px4_log_named_cond(name, cond, FMT, ##__VA_ARGS__)
 __END_DECLS
