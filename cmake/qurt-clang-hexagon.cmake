@@ -31,9 +31,18 @@
 
 include(CMakeForceCompiler)
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+include(px4_utils)
+
 if(NOT HEXAGON_TOOLS_ROOT)
 	set(HEXAGON_TOOLS_ROOT /opt/6.4.05)
 endif()
+
+if(NOT HEXAGON_SDK_ROOT)
+	set(HEXAGON_SDK_ROOT /opt/Hexagon_SDK)
+endif()
+
+
 set(V_ARCH "v5")
 set(CROSSDEV "hexagon-")
 set(HEXAGON_BIN	${HEXAGON_TOOLS_ROOT}/gnu/bin)
@@ -54,7 +63,7 @@ set(CMAKE_NM	  ${HEXAGON_BIN}/${CROSSDEV}nm)
 set(CMAKE_OBJDUMP ${HEXAGON_BIN}/${CROSSDEV}objdump)
 set(CMAKE_OBJCOPY ${HEXAGON_BIN}/${CROSSDEV}objcopy)
 
-set(HEXAGON_INCLUDE_DIRS
+list2string(HEXAGON_INCLUDE_DIRS 
 	-I${HEXAGON_TOOLS_ROOT}/gnu/hexagon/include
 	-I${HEXAGON_SDK_ROOT}/inc
 	-I${HEXAGON_SDK_ROOT}/inc/stddef
@@ -143,7 +152,7 @@ set(EXTRA_LIBS ${EXTRA_LIBS} ${LIBM})
 
 # Flags we pass to the C compiler
 #
-set(CFLAGS 
+list2string(CFLAGS 
 	${ARCHCFLAGS}
 	${ARCHCWARNINGS}
 	${ARCHOPTIMIZATION}
@@ -158,7 +167,7 @@ set(CFLAGS
 
 # Flags we pass to the C++ compiler
 #
-set(CXXFLAGS
+list2string(CXXFLAGS
 	${ARCHCXXFLAGS}
 	${ARCHWARNINGSXX}
 	${ARCHOPTIMIZATION}
@@ -174,7 +183,7 @@ set(CXXFLAGS
 
 # Flags we pass to the assembler
 #
-set(AFLAGS
+list2string(AFLAGS
 	${CFLAGS} 
 	-D__ASSEMBLY__
 	${EXTRADEFINES}
@@ -183,19 +192,19 @@ set(AFLAGS
 
 # Set cmake flags
 #
-set(CMAKE_C_FLAGS
+list2string(CMAKE_C_FLAGS
 	${CMAKE_C_FLAGS}
 	${CFLAGS}
 	)
 
-set(CMAKE_CXX_FLAGS
+list2string(CMAKE_CXX_FLAGS
 	${CMAKE_CXX_FLAGS}
 	${CXXFLAGS}
 	)
 
 # Flags we pass to the linker
 #
-set(CMAKE_EXE_LINKER_FLAGS
+list2string(CMAKE_EXE_LINKER_FLAGS
 	-g 
 	-mv5 
 	-mG0lib 
