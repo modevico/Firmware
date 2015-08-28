@@ -10,6 +10,25 @@ if (NOT ${CMAKE_VERSION} VERSION_LESS 3.0.0)
 	cmake_policy(SET CMP0046 NEW) # no non-existent targets as dependencies
 endif()
 
+##############################################################################
+#	CMake Packages/ Modules
+#
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+enable_testing()
+include(CMakeParseArguments)
+include(px4_utils)
+
+if (NOT NESTED_CMAKE_CALL)
+  px4_add_target( qurt
+                  ${CMAKE_SOURCE_DIR}/cmake/qurt-clang-hexagon.cmake 
+                  "-DTARGET_OS=qurt;-DTARGET_BOARD=hil;-DTARGET_LABEL=simple"
+                )
+
+  add_custom_target( everything DEPENDS all qurt)
+  add_custom_target( clean-all DEPENDS clean qurt-clean )
+  return()
+endif(NOT NESTED_CMAKE_CALL)
+
 
 ##############################################################################
 #	Parameters
@@ -57,14 +76,6 @@ if (${TARGET_NAME} STREQUAL "qurt-hil-simple")
 else()
 	message(FATAL_ERROR "not implemented yet: ${TARGET_NAME}")
 endif()
-
-##############################################################################
-#	CMake Packages/ Modules
-#
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
-enable_testing()
-include(CMakeParseArguments)
-include(px4_utils)
 
 ##############################################################################
 #	GIT
