@@ -152,7 +152,7 @@ macro(px4_add_target spec tcfile cmakeflags)
       SET( ALL "NO" )
    else ( NOT ${tcfile} STREQUAL "" )
       SET( ALL "YES" )
-   endif ( NOT ${tcfile} STREQUAL "" )s
+   endif ( NOT ${tcfile} STREQUAL "" )
    
    execute_process( COMMAND ${CMAKE_COMMAND} -E make_directory ${spec} 
                   )

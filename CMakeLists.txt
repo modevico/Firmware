@@ -24,8 +24,8 @@ if (NOT NESTED_CMAKE_CALL)
                   "-DTARGET_OS=qurt;-DTARGET_BOARD=hil;-DTARGET_LABEL=simple"
                 )
 
-  px4_custom_target( everything DEPENDS all qurt)
-  px4_custom_target( clean-all DEPENDS clean qurt-clean )
+  add_custom_target( everything DEPENDS all qurt)
+  add_custom_target( clean-all DEPENDS clean qurt-clean )
   return()
 endif(NOT NESTED_CMAKE_CALL)
 
