@@ -109,7 +109,7 @@ set(ARCHCFLAGS
 set(ARCHCXXFLAGS
 	-fno-exceptions
 	-fno-rtti
-	-std=gnu++0x
+	-std=c++11
 	-fno-threadsafe-statics
 	-DCONFIG_WCHAR_BUILTIN
 	-D__CUSTOM_FILE_IO__
@@ -196,10 +196,18 @@ list2string(CMAKE_C_FLAGS
 	${CFLAGS}
 	)
 
+set(QURT_CMAKE_C_FLAGS ${CMAKE_C_FLAGS} CACHE STRING "cflags")
+
+message(STATUS "CMAKE_C_FLAGS: -${CMAKE_C_FLAGS}-")
+
 list2string(CMAKE_CXX_FLAGS
 	${CMAKE_CXX_FLAGS}
 	${CXXFLAGS}
 	)
+
+set(QURT_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} CACHE STRING "cxxflags")
+
+message(STATUS "CMAKE_CXX_FLAGS: -${CMAKE_CXX_FLAGS}-")
 
 # Flags we pass to the linker
 #
@@ -223,6 +231,9 @@ list2string(CMAKE_EXE_LINKER_FLAGS
 
 # where is the target environment 
 set(CMAKE_FIND_ROOT_PATH  get_file_component(${C_COMPILER} PATH))
+
+set(CMAKE_C_COMPILER_ID, "Clang")
+set(CMAKE_CXX_COMPILER_ID, "Clang")
 
 # search for programs in the build host directories
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)

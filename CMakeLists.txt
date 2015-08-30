@@ -236,9 +236,18 @@ elseif(${TARGET_OS} STREQUAL "qurt")
 	# Used to call CMAKE_SYSTEM_NAME-compiler-CMAKE_SYSTEM_PROCESSOR.cmake
 	set(CMAKE_SYSTEM_NAME qurt)
 	set(CMAKE_SYSTEM_PROCESSOR hexagon)
-endif()
 
-#set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/cmake/${CMAKE_SYSTEM_NAME}-${COMPILER}-${CMAKE_SYSTEM_PROCESSOR}.cmake)
+	set(CMAKE_C_FLAGS ${QURT_CMAKE_C_FLAGS})
+	set(CMAKE_CXX_FLAGS ${QURT_CMAKE_CXX_FLAGS})
+	set(CMAKE_SHARED_LINKER_FLAGS "")
+
+	message(STATUS "CMAKE_C_FLAGS: -${CMAKE_C_FLAGS}-")
+	message(STATUS "CMAKE_CXX_FLAGS: -${CMAKE_CXX_FLAGS}-")
+
+	# Clear -rdynamic flag which fails for hexagon
+	set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
+	set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
+endif()
 
 ##############################################################################
 #	Modules
@@ -289,7 +298,7 @@ if (${TARGET_OS} STREQUAL "posix")
 		)
 elseif (${TARGET_OS} STREQUAL "qurt")
 	list(APPEND module_directories
-		./src/platforms/posix/px4_layer
+		./src/platforms/qurt/px4_layer
 		./src/platforms/posix/work_queue
 		)
 endif()
