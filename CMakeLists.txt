@@ -19,13 +19,18 @@ include(CMakeParseArguments)
 include(px4_utils)
 
 if (NOT NESTED_CMAKE_CALL)
+  px4_add_target( posix
+                  ${CMAKE_SOURCE_DIR}/cmake/posix-clang-native.cmake 
+                  "-DTARGET_OS=posix;-DTARGET_BOARD=hil;-DTARGET_LABEL=simple"
+                )
+
   px4_add_target( qurt
                   ${CMAKE_SOURCE_DIR}/cmake/qurt-clang-hexagon.cmake 
                   "-DTARGET_OS=qurt;-DTARGET_BOARD=hil;-DTARGET_LABEL=simple"
                 )
 
-  add_custom_target( everything DEPENDS all qurt)
-  add_custom_target( clean-all DEPENDS clean qurt-clean )
+  add_custom_target( everything DEPENDS all qurt posix)
+  add_custom_target( clean-all DEPENDS clean qurt-clean posix-clean)
   return()
 endif(NOT NESTED_CMAKE_CALL)
 
@@ -73,6 +78,7 @@ endif()
 #		Config validation
 #
 if (${TARGET_NAME} STREQUAL "qurt-hil-simple")
+elseif(${TARGET_NAME} STREQUAL "posix-hil-simple")
 else()
 	message(FATAL_ERROR "not implemented yet: ${TARGET_NAME}")
 endif()
@@ -95,7 +101,7 @@ add_git_submodule(gencpp Tools/gencpp)
 add_git_submodule(gtest unittests/gtest)
 add_git_submodule(eigen src/lib/eigen) 
 if(${TARGET_OS} STREQUAL "qurt")
-#add_git_submodule(dspal src/lib/dspal) 
+add_git_submodule(dspal src/lib/dspal) 
 endif()
 
 ##############################################################################
@@ -213,11 +219,15 @@ if(${TARGET_OS} STREQUAL "posix")
 		-D__PX4_POSIX
 		-D__PX4_LINUX
 		"-Dnoreturn_function=__attribute__\(\(noreturn\)\)"
+    		-fvisibility=${DEFAULT_VISIBILITY} -include ${PX4_INCLUDE_DIR}visibility.h
 		-DCLOCK_MONOTONIC=1
 		)
-	# Used to call CMAKE_SYSTEM_NAME-compiler-CMAKE_SYSTEM_PROCESSOR.cmake
-	set(CMAKE_SYSTEM_NAME posix)
-	set(CMAKE_SYSTEM_PROCESSOR native)
+	set(CMAKE_C_FLAGS ${POSIX_CMAKE_C_FLAGS})
+	set(CMAKE_CXX_FLAGS ${POSIX_CMAKE_CXX_FLAGS})
+
+	message(STATUS "CMAKE_C_FLAGS: -${CMAKE_C_FLAGS}-")
+	message(STATUS "CMAKE_CXX_FLAGS: -${CMAKE_CXX_FLAGS}-")
+
 elseif(${TARGET_OS} STREQUAL "qurt")
 	set(DSPAL_ROOT src/lib/dspal)
 	include_directories(
@@ -353,14 +363,15 @@ set(installed_targets)
 if ("${TARGET_OS}" STREQUAL "posix")
 	add_executable(main ./src/platforms/posix/main.cpp)
 	target_link_libraries(main ${module_list} pthread)
+	list(APPEND installed_targets main)
 
 
 elseif ("${TARGET_OS}" STREQUAL "qurt")
-	add_executable(main ./src/platforms/qurt/px4_layer/main.cpp)
-	target_link_libraries(main ${module_list} pthread)
+	add_library(dspal_main SHARED ./src/platforms/qurt/px4_layer/main.cpp)
+	target_link_libraries(dspal_main ${module_list})
+	list(APPEND installed_targets dspal_main)
 endif()
 
-list(APPEND installed_targets main)
 
 #=============================================================================
 #	Install
