@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project(px4 CXX C ASM)
 
-message(STATUS "Found ar: -${CMAKE_AR}-")
-
 if (NOT ${CMAKE_VERSION} VERSION_LESS 3.0.0)
 	cmake_policy(SET CMP0046 NEW) # no non-existent targets as dependencies
 endif()
@@ -20,8 +18,8 @@ include(px4_utils)
 
 if (NOT NESTED_CMAKE_CALL)
   px4_add_target( posix
-                  ${CMAKE_SOURCE_DIR}/cmake/posix-clang-native.cmake 
-                  "-DTARGET_OS=posix;-DTARGET_BOARD=hil;-DTARGET_LABEL=simple"
+                  "" 
+                  "-DTARGET_OS=posix;-DTARGET_BOARD=sitl;-DTARGET_LABEL=simple"
                 )
 
   px4_add_target( qurt
@@ -78,7 +76,7 @@ endif()
 #		Config validation
 #
 if (${TARGET_NAME} STREQUAL "qurt-hil-simple")
-elseif(${TARGET_NAME} STREQUAL "posix-hil-simple")
+elseif(${TARGET_NAME} STREQUAL "posix-sitl-simple")
 else()
 	message(FATAL_ERROR "not implemented yet: ${TARGET_NAME}")
 endif()
@@ -99,9 +97,11 @@ add_git_submodule(mavlink mavlink/include/mavlink/v1.0)
 add_git_submodule(genmsg Tools/genmsg)
 add_git_submodule(gencpp Tools/gencpp)
 add_git_submodule(gtest unittests/gtest)
-add_git_submodule(eigen src/lib/eigen) 
 if(${TARGET_OS} STREQUAL "qurt")
 add_git_submodule(dspal src/lib/dspal) 
+add_git_submodule(eigen src/lib/eigen-3.2) 
+else (${TARGET_OS} STREQUAL "qurt")
+add_git_submodule(eigen src/lib/eigen) 
 endif()
 
 ##############################################################################
@@ -197,11 +197,15 @@ include_directories(
 	src/platforms
 	# TODO Build/versioning was in Makefile, do we need this, how does it work with cmake
 	src/drivers/boards/${TARGET_BOARD}
-	src/lib/eigen
 	${CMAKE_BINARY_DIR}
 	${CMAKE_BINARY_DIR}/src/modules/px4_messages
 	${CMAKE_BINARY_DIR}/src/modules
 	)
+if(${TARGET_OS} STREQUAL "qurt")
+	include_directories(src/lib/eigen)
+else(${TARGET_OS} STREQUAL "qurt")
+	include_directories(src/lib/eigen-3.2)
+endif()
 
 add_definitions(
 	-DCONFIG_ARCH_BOARD_${BOARD_CONFIG}
@@ -212,6 +216,7 @@ add_definitions(
 #
 set(CMAKE_SYSTEM_VERSION 1)
 if(${TARGET_OS} STREQUAL "posix")
+	include(posix-flags)
 	include_directories(
 		src/platforms/posix/include
 		)
@@ -219,7 +224,7 @@ if(${TARGET_OS} STREQUAL "posix")
 		-D__PX4_POSIX
 		-D__PX4_LINUX
 		"-Dnoreturn_function=__attribute__\(\(noreturn\)\)"
-    		-fvisibility=${DEFAULT_VISIBILITY} -include ${PX4_INCLUDE_DIR}visibility.h
+		-fvisibility=${DEFAULT_VISIBILITY} -include ${PX4_INCLUDE_DIR}visibility.h
 		-DCLOCK_MONOTONIC=1
 		)
 	set(CMAKE_C_FLAGS ${POSIX_CMAKE_C_FLAGS})
@@ -274,12 +279,6 @@ endif()
 #		module directories, order determines linking order
 #
 set(module_directories)
-
-if ("${TARGET_BOARD}" STREQUAL "px4fmu-v2")
-	list(APPEND module_directories
-		./src/drivers/boards/px4fmu-v2
-		)
-endif()
 
 list(APPEND module_directories
 	./src/drivers/led

@@ -5,6 +5,10 @@
 # scope, as well as variables explicity set with PARENT_SCOPE.
 #
 
+if (${CMAKE_MAJOR_VERSION} GREATER 2)
+   cmake_policy( SET CMP0037 OLD )
+endif()
+
 include(CMakeParseArguments)
 
 function(add_git_submodule NAME PATH)
